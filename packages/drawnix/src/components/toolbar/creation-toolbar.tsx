@@ -16,7 +16,6 @@ import {
 import { useBoard } from '@plait-board/react-board';
 import {
   ATTACHED_ELEMENT_CLASS_NAME,
-  BoardTransforms,
   PlaitBoard,
   PlaitPointerType,
 } from '@plait/core';
@@ -45,6 +44,7 @@ import { Translations, useI18n } from '../../i18n';
 import { SHAPES } from '../shape-picker';
 import { ARROWS } from '../arrow-picker';
 import { FREEHANDS } from '../../constants/freehand';
+import { updateDrawnixPointer } from '../../utils/pointer';
 
 export enum PopupKey {
   'shape' = 'shape',
@@ -152,7 +152,7 @@ export const CreationToolbar = () => {
 
   const onPointerDown = (pointer: DrawnixPointerType) => {
     setCreationMode(board, BoardCreationMode.dnd);
-    BoardTransforms.updatePointerType(board, pointer);
+    updateDrawnixPointer(board, pointer);
     setPointer(pointer);
   };
 
@@ -295,17 +295,17 @@ export const CreationToolbar = () => {
                     icon={button.icon}
                     title={button.titleKey ? t(button.titleKey) : 'Shape'}
                     aria-label={button.titleKey ? t(button.titleKey) : 'Shape'}
-                    onPointerDown={() => {
-                      setShapeOpen(!shapeOpen);
-                      if (isShapePointer(board)) {
-                        BoardTransforms.updatePointerType(board, board.pointer);
-                      } else {
-                        setPointer(lastShapePointer || SHAPES[0].pointer);
-                        setCreationMode(board, BoardCreationMode.drawing);
-                        BoardTransforms.updatePointerType(
-                          board,
-                          lastShapePointer || SHAPES[0].pointer
-                        );
+                      onPointerDown={() => {
+                        setShapeOpen(!shapeOpen);
+                        if (isShapePointer(board)) {
+                          updateDrawnixPointer(board, board.pointer);
+                        } else {
+                          setPointer(lastShapePointer || SHAPES[0].pointer);
+                          setCreationMode(board, BoardCreationMode.drawing);
+                          updateDrawnixPointer(
+                            board,
+                            lastShapePointer || SHAPES[0].pointer
+                          );
                       }
                     }}
                   />
@@ -340,16 +340,16 @@ export const CreationToolbar = () => {
                     icon={button.icon}
                     title={button.titleKey ? t(button.titleKey) : ''}
                     aria-label={button.titleKey ? t(button.titleKey) : ''}
-                    onPointerDown={() => {
-                      setArrowOpen(!arrowOpen);
-                      if (isArrowLinePointer(board)) {
-                        BoardTransforms.updatePointerType(board, board.pointer);
-                      } else {
-                        setCreationMode(board, BoardCreationMode.drawing);
-                        BoardTransforms.updatePointerType(
-                          board,
-                          lastArrowPointer || ARROWS[0].pointer
-                        );
+                      onPointerDown={() => {
+                        setArrowOpen(!arrowOpen);
+                        if (isArrowLinePointer(board)) {
+                          updateDrawnixPointer(board, board.pointer);
+                        } else {
+                          setCreationMode(board, BoardCreationMode.drawing);
+                          updateDrawnixPointer(
+                            board,
+                            lastArrowPointer || ARROWS[0].pointer
+                          );
                         setPointer(lastArrowPointer || ARROWS[0].pointer);
                       }
                     }}
@@ -387,7 +387,7 @@ export const CreationToolbar = () => {
                 if (button.pointer && !isBasicPointer(button.pointer)) {
                   onPointerUp();
                 } else if (button.pointer && isBasicPointer(button.pointer)) {
-                  BoardTransforms.updatePointerType(board, button.pointer);
+                  updateDrawnixPointer(board, button.pointer);
                   setPointer(button.pointer);
                 }
                 if (button.key === 'image') {

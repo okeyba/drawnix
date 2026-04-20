@@ -1,9 +1,4 @@
-import {
-  BoardTransforms,
-  getSelectedElements,
-  PlaitBoard,
-  PlaitPointerType,
-} from '@plait/core';
+import { getSelectedElements, PlaitBoard, PlaitPointerType } from '@plait/core';
 import { isHotkey } from 'is-hotkey';
 import { addImage, saveAsImage } from '../utils/image';
 import { saveAsJSON } from '../data/json';
@@ -12,6 +7,7 @@ import { BoardCreationMode, setCreationMode } from '@plait/common';
 import { MindPointerType } from '@plait/mind';
 import { FreehandShape } from './freehand/type';
 import { ArrowLineShape, BasicShapes } from '@plait/draw';
+import { updateDrawnixPointer } from '../utils/pointer';
 
 export const buildDrawnixHotkeyPlugin = (
   updateAppState: (appState: Partial<DrawnixState>) => void
@@ -55,37 +51,34 @@ export const buildDrawnixHotkeyPlugin = (
         }
         if (!event.altKey && !event.metaKey && !event.ctrlKey) {
           if (event.key === 'h') {
-            BoardTransforms.updatePointerType(board, PlaitPointerType.hand);
+            updateDrawnixPointer(board, PlaitPointerType.hand);
             updateAppState({ pointer: PlaitPointerType.hand });
             event.preventDefault();
             return;
           }
           if (event.key === 'v') {
-            BoardTransforms.updatePointerType(
-              board,
-              PlaitPointerType.selection
-            );
+            updateDrawnixPointer(board, PlaitPointerType.selection);
             updateAppState({ pointer: PlaitPointerType.selection });
             event.preventDefault();
             return;
           }
           if (event.key === 'm') {
             setCreationMode(board, BoardCreationMode.dnd);
-            BoardTransforms.updatePointerType(board, MindPointerType.mind);
+            updateDrawnixPointer(board, MindPointerType.mind);
             updateAppState({ pointer: MindPointerType.mind });
             event.preventDefault();
             return;
           }
           if (event.key === 'e') {
             setCreationMode(board, BoardCreationMode.drawing);
-            BoardTransforms.updatePointerType(board, FreehandShape.eraser);
+            updateDrawnixPointer(board, FreehandShape.eraser);
             updateAppState({ pointer: FreehandShape.eraser });
             event.preventDefault();
             return;
           }
           if (event.key === 'p') {
             setCreationMode(board, BoardCreationMode.drawing);
-            BoardTransforms.updatePointerType(board, FreehandShape.feltTipPen);
+            updateDrawnixPointer(board, FreehandShape.feltTipPen);
             updateAppState({ pointer: FreehandShape.feltTipPen });
             event.preventDefault();
             return;
@@ -94,7 +87,7 @@ export const buildDrawnixHotkeyPlugin = (
             // will trigger editing text
             if (getSelectedElements(board).length === 0) {
               setCreationMode(board, BoardCreationMode.drawing);
-              BoardTransforms.updatePointerType(board, ArrowLineShape.straight);
+              updateDrawnixPointer(board, ArrowLineShape.straight);
               updateAppState({ pointer: ArrowLineShape.straight });
               event.preventDefault();
               return;
@@ -111,7 +104,7 @@ export const buildDrawnixHotkeyPlugin = (
             } else {
               setCreationMode(board, BoardCreationMode.drawing);
             }
-            BoardTransforms.updatePointerType(board, keyToPointer[event.key]);
+            updateDrawnixPointer(board, keyToPointer[event.key]);
             updateAppState({ pointer: keyToPointer[event.key] });
             event.preventDefault();
             return;
