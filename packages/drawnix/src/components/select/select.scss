@@ -71,7 +71,7 @@
     color: var(--color-text-secondary);
     display: flex;
     align-items: center;
-    
+
     svg {
       display: block;
     }
@@ -136,7 +136,7 @@
     &[data-highlighted] {
       background-color: var(--color-primary);
       color: var(--color-icon-white);
-      
+
       .dx-SelectItemIndicator {
         color: var(--color-icon-white);
       }
@@ -157,7 +157,7 @@
     justify-content: center;
     color: var(--color-primary);
   }
-  
+
   .dx-SelectItemText {
     flex: 1;
     overflow: hidden;
@@ -191,25 +191,25 @@
     --dx-select-trigger-height: 24px;
     --dx-select-item-height: 24px;
     font-size: 12px;
-    
+
     &.dx-SelectItem {
-       font-size: 12px;
+      font-size: 12px;
     }
   }
-  
+
   .dx-r-size-2 {
     --dx-select-trigger-height: 32px;
     --dx-select-item-height: 28px; /* Radix often uses slightly smaller items */
     font-size: 14px;
   }
-  
+
   .dx-r-size-3 {
     --dx-select-trigger-height: 40px;
     --dx-select-item-height: 32px;
     font-size: 16px;
-    
+
     &.dx-SelectItem {
-       font-size: 16px;
+      font-size: 16px;
     }
   }
 }

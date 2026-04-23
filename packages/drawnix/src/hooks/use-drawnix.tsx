@@ -3,12 +3,7 @@
  * context whenever changes occur.
  */
 import { PlaitBoard, PlaitPointerType } from '@plait/core';
-import {
-  createContext,
-  useContext,
-  type Dispatch,
-  type SetStateAction,
-} from 'react';
+import { createContext, useContext, type Dispatch, type SetStateAction } from 'react';
 import { MindPointerType } from '@plait/mind';
 import { DrawPointerType } from '@plait/draw';
 import { FreehandShape } from '../plugins/freehand/type';

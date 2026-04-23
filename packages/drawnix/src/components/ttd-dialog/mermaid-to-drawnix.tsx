@@ -37,13 +37,12 @@ const MERMAID_EXAMPLE =
 const MermaidToDrawnix = () => {
   const { appState, setAppState } = useDrawnix();
   const { t, language } = useI18n();
-  const [mermaidToDrawnixLib, setMermaidToDrawnixLib] =
-    useState<MermaidToDrawnixLibProps>({
-      loaded: false,
-      api: Promise.resolve({
-        parseMermaidToDrawnix: async () => ({ elements: [] }),
-      }),
-    });
+  const [mermaidToDrawnixLib, setMermaidToDrawnixLib] = useState<MermaidToDrawnixLibProps>({
+    loaded: false,
+    api: Promise.resolve({
+      parseMermaidToDrawnix: async () => ({ elements: [] }),
+    }),
+  });
 
   useEffect(() => {
     const loadLib = async () => {
@@ -54,6 +53,7 @@ const MermaidToDrawnix = () => {
           api: Promise.resolve(module),
         });
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('Failed to load mermaid library:', err);
         setError(new Error(t('dialog.error.loadMermaid')));
       }
@@ -74,9 +74,7 @@ const MermaidToDrawnix = () => {
         try {
           ret = await api.parseMermaidToDrawnix(deferredText);
         } catch (err: any) {
-          ret = await api.parseMermaidToDrawnix(
-            deferredText.replace(/"/g, "'")
-          );
+          ret = await api.parseMermaidToDrawnix(deferredText.replace(/"/g, "'"));
         }
         const { elements } = ret;
         setValue(elements);
@@ -92,12 +90,8 @@ const MermaidToDrawnix = () => {
     if (!value.length) {
       return;
     }
-    const boardContainerRect =
-      PlaitBoard.getBoardContainer(board).getBoundingClientRect();
-    const focusPoint = [
-      boardContainerRect.width / 2,
-      boardContainerRect.height / 2,
-    ];
+    const boardContainerRect = PlaitBoard.getBoardContainer(board).getBoundingClientRect();
+    const focusPoint = [boardContainerRect.width / 2, boardContainerRect.height / 2];
     const zoom = board.viewport.zoom;
     const origination = getViewportOrigination(board);
     const centerX = origination![0] + focusPoint[0] / zoom;
@@ -106,9 +100,7 @@ const MermaidToDrawnix = () => {
     const elementRectangle = RectangleClient.getBoundingRectangle(
       elements
         .filter((ele) => !PlaitGroupElement.isGroup(ele))
-        .map((ele) =>
-          RectangleClient.getRectangleByPoints(ele.points as Point[])
-        )
+        .map((ele) => RectangleClient.getRectangleByPoints(ele.points as Point[]))
     );
     const startPoint = [
       centerX - elementRectangle.width / 2,
@@ -129,13 +121,8 @@ const MermaidToDrawnix = () => {
       <div className="ttd-dialog-desc">
         {language === 'zh' ? (
           <>
-            {t('dialog.mermaid.description')}
-            {' '}
-            <a
-              href="https://mermaid.js.org/syntax/flowchart.html"
-              target="_blank"
-              rel="noreferrer"
-            >
+            {t('dialog.mermaid.description')}{' '}
+            <a href="https://mermaid.js.org/syntax/flowchart.html" target="_blank" rel="noreferrer">
               {t('dialog.mermaid.flowchart')}
             </a>
             、
@@ -145,10 +132,8 @@ const MermaidToDrawnix = () => {
               rel="noreferrer"
             >
               {t('dialog.mermaid.sequence')}
-            </a>
-            {' '}
-            和
-            {' '}
+            </a>{' '}
+            和{' '}
             <a
               href="https://mermaid.js.org/syntax/classDiagram.html"
               target="_blank"
@@ -160,13 +145,8 @@ const MermaidToDrawnix = () => {
           </>
         ) : (
           <>
-            {t('dialog.mermaid.description')}
-            {' '}
-            <a
-              href="https://mermaid.js.org/syntax/flowchart.html"
-              target="_blank"
-              rel="noreferrer"
-            >
+            {t('dialog.mermaid.description')}{' '}
+            <a href="https://mermaid.js.org/syntax/flowchart.html" target="_blank" rel="noreferrer">
               {t('dialog.mermaid.flowchart')}
             </a>
             ,{' '}
@@ -210,11 +190,7 @@ const MermaidToDrawnix = () => {
           }}
           renderSubmitShortcut={() => <TTDDialogSubmitShortcut />}
         >
-          <TTDDialogOutput
-            value={value}
-            loaded={mermaidToDrawnixLib.loaded}
-            error={error}
-          />
+          <TTDDialogOutput value={value} loaded={mermaidToDrawnixLib.loaded} error={error} />
         </TTDDialogPanel>
       </TTDDialogPanels>
     </>

@@ -1,9 +1,4 @@
-import {
-  BoardTransforms,
-  getSelectedElements,
-  PlaitBoard,
-  PlaitPointerType,
-} from '@plait/core';
+import { BoardTransforms, getSelectedElements, PlaitBoard, PlaitPointerType } from '@plait/core';
 import { isHotkey } from 'is-hotkey';
 import { addImage, saveAsImage } from '../utils/image';
 import { saveAsJSON } from '../data/json';
@@ -20,12 +15,10 @@ export const buildDrawnixHotkeyPlugin = (
     const { globalKeyDown, keyDown } = board;
     board.globalKeyDown = (event: KeyboardEvent) => {
       const isTypingNormal =
-        event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement;
+        event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement;
       if (
         !isTypingNormal &&
-        (PlaitBoard.getMovingPointInBoard(board) ||
-          PlaitBoard.isMovingPointInBoard(board)) &&
+        (PlaitBoard.getMovingPointInBoard(board) || PlaitBoard.isMovingPointInBoard(board)) &&
         !PlaitBoard.hasBeenTextEditing(board)
       ) {
         if (isHotkey(['mod+shift+e'], { byKey: true })(event)) {
@@ -38,10 +31,7 @@ export const buildDrawnixHotkeyPlugin = (
           event.preventDefault();
           return;
         }
-        if (
-          isHotkey(['mod+backspace'])(event) ||
-          isHotkey(['mod+delete'])(event)
-        ) {
+        if (isHotkey(['mod+backspace'])(event) || isHotkey(['mod+delete'])(event)) {
           updateAppState({
             openCleanConfirm: true,
           });
@@ -61,10 +51,7 @@ export const buildDrawnixHotkeyPlugin = (
             return;
           }
           if (event.key === 'v') {
-            BoardTransforms.updatePointerType(
-              board,
-              PlaitPointerType.selection
-            );
+            BoardTransforms.updatePointerType(board, PlaitPointerType.selection);
             updateAppState({ pointer: PlaitPointerType.selection });
             event.preventDefault();
             return;

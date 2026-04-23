@@ -60,11 +60,7 @@ const useBoardEvent = (
           -sign *
           // reduced amplification for small deltas (small movements on a trackpad)
           Math.min(1, absDelta / 20);
-        BoardTransforms.updateZoom(
-          board,
-          newZoom,
-          PlaitBoard.getMovingPointInBoard(board)
-        );
+        BoardTransforms.updateZoom(board, newZoom, PlaitBoard.getMovingPointInBoard(board));
       }
     },
     { target: viewportContainerRef, passive: false }

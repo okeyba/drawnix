@@ -20,24 +20,20 @@ import { MindElement } from '@plait/mind';
 export interface MarkdownToDrawnixLibProps {
   loaded: boolean;
   api: Promise<{
-    parseMarkdownToDrawnix: (
-      definition: string,
-      mainTopic?: string
-    ) => MindElement;
+    parseMarkdownToDrawnix: (definition: string, mainTopic?: string) => MindElement;
   }>;
 }
 
 const MarkdownToDrawnix = () => {
   const { appState, setAppState } = useDrawnix();
   const { t, language } = useI18n();
-  const [markdownToDrawnixLib, setMarkdownToDrawnixLib] =
-    useState<MarkdownToDrawnixLibProps>({
-      loaded: false,
-      api: Promise.resolve({
-        parseMarkdownToDrawnix: (definition: string, mainTopic?: string) =>
-          null as any as MindElement,
-      }),
-    });
+  const [markdownToDrawnixLib, setMarkdownToDrawnixLib] = useState<MarkdownToDrawnixLibProps>({
+    loaded: false,
+    api: Promise.resolve({
+      parseMarkdownToDrawnix: (definition: string, mainTopic?: string) =>
+        null as any as MindElement,
+    }),
+  });
 
   useEffect(() => {
     const loadLib = async () => {
@@ -48,6 +44,7 @@ const MarkdownToDrawnix = () => {
           api: Promise.resolve(module),
         });
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('Failed to load mermaid library:', err);
         setError(new Error(t('dialog.error.loadMermaid')));
       }
@@ -59,7 +56,7 @@ const MarkdownToDrawnix = () => {
   const deferredText = useDeferredValue(text.trim());
   const [error, setError] = useState<Error | null>(null);
   const board = useBoard();
-   
+
   // Update markdown example when language changes
   useEffect(() => {
     setText(t('markdown.example'));
@@ -73,9 +70,7 @@ const MarkdownToDrawnix = () => {
         try {
           ret = await api.parseMarkdownToDrawnix(deferredText);
         } catch (err: any) {
-          ret = await api.parseMarkdownToDrawnix(
-            deferredText.replace(/"/g, "'")
-          );
+          ret = await api.parseMarkdownToDrawnix(deferredText.replace(/"/g, "'"));
         }
         const mind = ret;
         mind.points = [[0, 0]];
@@ -94,12 +89,8 @@ const MarkdownToDrawnix = () => {
     if (!value.length) {
       return;
     }
-    const boardContainerRect =
-      PlaitBoard.getBoardContainer(board).getBoundingClientRect();
-    const focusPoint = [
-      boardContainerRect.width / 4,
-      boardContainerRect.height / 2 - 20,
-    ];
+    const boardContainerRect = PlaitBoard.getBoardContainer(board).getBoundingClientRect();
+    const focusPoint = [boardContainerRect.width / 4, boardContainerRect.height / 2 - 20];
     const zoom = board.viewport.zoom;
     const origination = getViewportOrigination(board);
     const focusX = origination![0] + focusPoint[0] / zoom;
@@ -117,9 +108,7 @@ const MarkdownToDrawnix = () => {
 
   return (
     <>
-      <div className="ttd-dialog-desc">
-        {t('dialog.markdown.description')}
-      </div>
+      <div className="ttd-dialog-desc">{t('dialog.markdown.description')}</div>
       <TTDDialogPanels>
         <TTDDialogPanel label={t('dialog.markdown.syntax')}>
           <TTDDialogInput
@@ -141,11 +130,7 @@ const MarkdownToDrawnix = () => {
           }}
           renderSubmitShortcut={() => <TTDDialogSubmitShortcut />}
         >
-          <TTDDialogOutput
-            value={value}
-            loaded={markdownToDrawnixLib.loaded}
-            error={error}
-          />
+          <TTDDialogOutput value={value} loaded={markdownToDrawnixLib.loaded} error={error} />
         </TTDDialogPanel>
       </TTDDialogPanels>
     </>

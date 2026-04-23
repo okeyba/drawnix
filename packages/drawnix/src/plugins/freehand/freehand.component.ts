@@ -53,23 +53,15 @@ export class FreehandComponent
   ) {
     if (value.element !== previous.element || value.hasThemeChanged) {
       this.generator.processDrawing(this.element, this.getElementG());
-      this.activeGenerator.processDrawing(
-        this.element,
-        PlaitBoard.getActiveHost(this.board),
-        {
-          selected: this.selected,
-        }
-      );
+      this.activeGenerator.processDrawing(this.element, PlaitBoard.getActiveHost(this.board), {
+        selected: this.selected,
+      });
     } else {
       const needUpdate = value.selected !== previous.selected;
       if (needUpdate || value.selected) {
-        this.activeGenerator.processDrawing(
-          this.element,
-          PlaitBoard.getActiveHost(this.board),
-          {
-            selected: this.selected,
-          }
-        );
+        this.activeGenerator.processDrawing(this.element, PlaitBoard.getActiveHost(this.board), {
+          selected: this.selected,
+        });
       }
     }
   }

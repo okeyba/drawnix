@@ -27,11 +27,7 @@ import { buildDrawnixHotkeyPlugin } from './plugins/with-hotkey';
 import { withFreehand } from './plugins/freehand/with-freehand';
 import { ThemeToolbar } from './components/toolbar/theme-toolbar';
 import { buildPencilPlugin } from './plugins/with-pencil';
-import {
-  DrawnixBoard,
-  DrawnixContext,
-  DrawnixState,
-} from './hooks/use-drawnix';
+import { DrawnixBoard, DrawnixContext, DrawnixState } from './hooks/use-drawnix';
 import { ClosePencilToolbar } from './components/toolbar/pencil-mode-toolbar';
 import { TTDDialog } from './components/ttd-dialog/ttd-dialog';
 import { CleanConfirm } from './components/clean-confirm/clean-confirm';
@@ -146,11 +142,9 @@ export const Drawnix: React.FC<DrawnixProps> = ({
                 afterInit && afterInit(board);
               }}
             >
-              {tutorial &&
-                board &&
-                PlaitBoard.isPointer(board, PlaitPointerType.selection) && (
-                  <Tutorial />
-                )}
+              {tutorial && board && PlaitBoard.isPointer(board, PlaitPointerType.selection) && (
+                <Tutorial />
+              )}
             </Board>
             <AppToolbar></AppToolbar>
             <CreationToolbar></CreationToolbar>

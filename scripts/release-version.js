@@ -11,7 +11,9 @@ execSync(`nx release changelog ${version}`, { stdio: 'inherit' });
 
 // Commit all changes with a single commit message
 execSync('git add .', { stdio: 'inherit' });
-execSync(`git commit -m "chore(release): publish ${version}"`, { stdio: 'inherit' });
+execSync(`git commit -m "chore(release): publish ${version}"`, {
+  stdio: 'inherit',
+});
 
 // Create a Git tag for the release
 execSync(`git tag -a v${version} -m "v${version}"`, { stdio: 'inherit' });

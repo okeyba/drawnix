@@ -9,10 +9,7 @@ export const getDefaultName = () => {
   return time.toString();
 };
 
-export const saveAsJSON = async (
-  board: PlaitBoard,
-  name: string = getDefaultName()
-) => {
+export const saveAsJSON = async (board: PlaitBoard, name: string = getDefaultName()) => {
   const serialized = serializeAsJSON(board);
   const blob = new Blob([serialized], {
     type: MIME_TYPES.drawnix,

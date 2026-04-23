@@ -24,9 +24,7 @@ export function App() {
 
   useEffect(() => {
     const loadData = async () => {
-      const storedData = (await localforage.getItem(
-        MAIN_BOARD_CONTENT_KEY
-      )) as AppValue;
+      const storedData = (await localforage.getItem(MAIN_BOARD_CONTENT_KEY)) as AppValue;
       if (storedData) {
         setValue(storedData);
         if (storedData.children && storedData.children.length === 0) {
@@ -53,6 +51,7 @@ export function App() {
       }}
       tutorial={tutorial}
       afterInit={(board) => {
+        // eslint-disable-next-line no-console
         console.log('board initialized');
 
         // console.log(
@@ -67,9 +66,7 @@ export function App() {
 }
 
 const addDebugLog = (board: PlaitBoard, value: string) => {
-  const container = PlaitBoard.getBoardContainer(board).closest(
-    '.drawnix'
-  ) as HTMLElement;
+  const container = PlaitBoard.getBoardContainer(board).closest('.drawnix') as HTMLElement;
   let consoleContainer = container.querySelector('.drawnix-console');
   if (!consoleContainer) {
     consoleContainer = document.createElement('div');

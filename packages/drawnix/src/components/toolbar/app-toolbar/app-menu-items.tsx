@@ -1,10 +1,4 @@
-import {
-  ExportImageIcon,
-  GithubIcon,
-  OpenFileIcon,
-  SaveFileIcon,
-  TrashIcon,
-} from '../../icons';
+import { ExportImageIcon, GithubIcon, OpenFileIcon, SaveFileIcon, TrashIcon } from '../../icons';
 import { useBoard, useListRender } from '@plait-board/react-board';
 import {
   BoardTransforms,
@@ -38,7 +32,9 @@ export const SaveToFile = () => {
       icon={SaveFileIcon}
       aria-label={t('menu.saveFile')}
       shortcut={getShortcutKey('CtrlOrCmd+S')}
-    >{t('menu.saveFile')}</MenuItem>
+    >
+      {t('menu.saveFile')}
+    </MenuItem>
   );
 };
 SaveToFile.displayName = 'SaveToFile';
@@ -47,11 +43,7 @@ export const OpenFile = () => {
   const board = useBoard();
   const listRender = useListRender();
   const { t } = useI18n();
-  const clearAndLoad = (
-    value: PlaitElement[],
-    viewport?: Viewport,
-    theme?: PlaitTheme
-  ) => {
+  const clearAndLoad = (value: PlaitElement[], viewport?: Viewport, theme?: PlaitTheme) => {
     board.children = value;
     board.viewport = viewport || { zoom: 1 };
     if (theme) {
@@ -74,7 +66,9 @@ export const OpenFile = () => {
       }}
       icon={OpenFileIcon}
       aria-label={t('menu.open')}
-    >{t('menu.open')}</MenuItem>
+    >
+      {t('menu.open')}
+    </MenuItem>
   );
 };
 OpenFile.displayName = 'OpenFile';
@@ -91,13 +85,15 @@ export const SaveAsImage = () => {
         saveAsImage(board, true);
       }}
       submenu={
-        <Menu onSelect={() => {
-          const itemSelectEvent = new CustomEvent(EVENT.MENU_ITEM_SELECT, {
-            bubbles: true,
-            cancelable: true,
-          });
-          menuContentProps.onSelect?.(itemSelectEvent);
-        }}>
+        <Menu
+          onSelect={() => {
+            const itemSelectEvent = new CustomEvent(EVENT.MENU_ITEM_SELECT, {
+              bubbles: true,
+              cancelable: true,
+            });
+            menuContentProps.onSelect?.(itemSelectEvent);
+          }}
+        >
           <MenuItem
             onSelect={() => {
               saveAsSvg(board);

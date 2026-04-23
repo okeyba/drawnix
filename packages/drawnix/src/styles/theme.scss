@@ -1,4 +1,4 @@
-@import "./variables.module.scss";
+@use './variables.module.scss' as *;
 
 .drawnix {
   --focus-highlight-color: #a5d8ff;
@@ -42,11 +42,11 @@
   --color-icon-white: #ffffff;
 
   --color-primary: #6698ff;
-  --color-primary-darker: #4a7ee6;    // 降低亮度和饱和度
-  --color-primary-darkest: #3366cc;   // 进一步降低亮度
-  --color-primary-light: #e6f0ff;     // 提高亮度，降低饱和度
-  --color-primary-light-darker: #cce0ff;  // light 的稍暗版本
-  --color-primary-hover: #80acff;     // 略微提高亮度的互动状态
+  --color-primary-darker: #4a7ee6; // 降低亮度和饱和度
+  --color-primary-darkest: #3366cc; // 进一步降低亮度
+  --color-primary-light: #e6f0ff; // 提高亮度，降低饱和度
+  --color-primary-light-darker: #cce0ff; // light 的稍暗版本
+  --color-primary-hover: #80acff; // 略微提高亮度的互动状态
 
   --button-hover-bg: var(--color-surface-high);
   --button-active-bg: var(--color-surface-high);
@@ -81,7 +81,7 @@
   --color-on-surface: #666666;
   --color-brand-hover: #6698ff;
   --color-on-primary-container: #6698ff;
-  --color-surface-primary-container: rgba(102, 152, 255, .1);
+  --color-surface-primary-container: rgba(102, 152, 255, 0.1);
   --color-brand-active: #6698ff;
   --color-border-outline: #767680;
   --color-border-outline-variant: #c5c5d0;

@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 
-import {Board} from './board';
+import { Board } from './board';
 
 describe('ReactBoard', () => {
   it('should render successfully', () => {

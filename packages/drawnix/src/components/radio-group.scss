@@ -1,4 +1,4 @@
-@import '../styles/variables.module.scss';
+@use '../styles/variables.module.scss' as *;
 
 .drawnix {
   --RadioGroup-background: var(--island-bg-color);
@@ -39,7 +39,7 @@
 
       border-radius: 8px;
 
-      font-family: "Assistant";
+      font-family: 'Assistant';
       font-style: normal;
       font-weight: 600;
       font-size: 0.75rem;

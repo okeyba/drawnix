@@ -4,21 +4,36 @@
     "rootDir": ".",
     "sourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "es2015",
+    "target": "es2020",
     "module": "esnext",
-    "lib": ["es2020", "dom"],
+    "moduleResolution": "bundler",
+    "lib": [
+      "es2020",
+      "dom"
+    ],
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "baseUrl": ".",
+    "baseUrl": "./",
     "paths": {
-      "@drawnix/drawnix": ["packages/drawnix/src/index.ts"],
-      "@plait-board/react-board": ["packages/react-board/src/index.ts"],
-      "@plait-board/react-text": ["packages/react-text/src/index.ts"]
+      "@drawnix/drawnix": [
+        "packages/drawnix/src/index.ts"
+      ],
+      "@plait-board/react-board": [
+        "packages/react-board/src/index.ts"
+      ],
+      "@plait-board/react-text": [
+        "packages/react-text/src/index.ts"
+      ]
     }
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
 }

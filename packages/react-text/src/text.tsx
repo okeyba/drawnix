@@ -1,12 +1,6 @@
 import { createEditor, type Descendant, Range, Transforms } from 'slate';
 import { isKeyHotkey } from 'is-hotkey';
-import {
-  Editable,
-  RenderElementProps,
-  RenderLeafProps,
-  Slate,
-  withReact,
-} from 'slate-react';
+import { Editable, RenderElementProps, RenderLeafProps, Slate, withReact } from 'slate-react';
 import {
   type CustomElement,
   type CustomText,
@@ -25,22 +19,15 @@ import { LinkComponent, withInlineLink } from './plugins/with-link';
 
 export type TextComponentProps = TextProps;
 
-export const Text: React.FC<TextComponentProps> = (
-  props: TextComponentProps
-) => {
+export const Text: React.FC<TextComponentProps> = (props: TextComponentProps) => {
   const { text, readonly, onChange, onComposition, afterInit } = props;
 
-  const renderLeaf = useCallback(
-    (props: RenderLeafProps) => <Leaf {...props} />,
-    []
-  );
+  const renderLeaf = useCallback((props: RenderLeafProps) => <Leaf {...props} />, []);
 
   const initialValue: Descendant[] = [text];
 
   const editor = useMemo(() => {
-    const editor = withInlineLink(
-      withText(withHistory(withReact(createEditor())))
-    );
+    const editor = withInlineLink(withText(withHistory(withReact(createEditor()))));
     afterInit && afterInit(editor);
     return editor;
   }, []);
@@ -121,15 +108,9 @@ const Element = (props: RenderElementProps) => {
   >;
   switch (element.type) {
     case 'link':
-      return (
-        <LinkComponent {...(props as RenderElementPropsFor<LinkElement>)} />
-      );
+      return <LinkComponent {...(props as RenderElementPropsFor<LinkElement>)} />;
     default:
-      return (
-        <ParagraphComponent
-          {...(props as RenderElementPropsFor<ParagraphElement>)}
-        />
-      );
+      return <ParagraphComponent {...(props as RenderElementPropsFor<ParagraphElement>)} />;
   }
 };
 
@@ -165,15 +146,11 @@ const Leaf: React.FC<RenderLeafProps> = ({ children, leaf, attributes }) => {
 
   const fontSizeValue = (leaf as CustomText)['font-size'];
   const style: CSSProperties = {
-    color: (leaf as CustomText).color
+    color: (leaf as CustomText).color,
   };
 
   return (
-    <span
-      style={style}
-      {...attributes}
-      {...({ 'plait-font-size': fontSizeValue } as any)}
-    >
+    <span style={style} {...attributes} {...({ 'plait-font-size': fontSizeValue } as any)}>
       {children}
     </span>
   );

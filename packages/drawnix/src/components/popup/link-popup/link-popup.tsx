@@ -67,14 +67,9 @@ export const LinkPopup = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        refs.floating.current &&
-        !refs.floating.current.contains(event.target as Node)
-      ) {
+      if (refs.floating.current && !refs.floating.current.contains(event.target as Node)) {
         if (linkStateRef.current) {
-          const linkElement = LinkEditor.getLinkElement(
-            linkStateRef.current.editor
-          );
+          const linkElement = LinkEditor.getLinkElement(linkStateRef.current.editor);
           if (linkElement && !(linkElement[0] as LinkElement).url.trim()) {
             LinkEditor.unwrapLink(linkStateRef.current.editor);
           }
@@ -180,12 +175,7 @@ export const LinkPopup = () => {
             </>
           ) : (
             <>
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="link-popup__link"
-              >
+              <a href={url} target="_blank" rel="noopener noreferrer" className="link-popup__link">
                 {url}
               </a>
               <ToolButton

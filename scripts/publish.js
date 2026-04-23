@@ -4,9 +4,9 @@ const fs = require('fs');
 
 const libraries = ['react-board', 'react-text', 'drawnix'];
 
-libraries.forEach(lib => {
+libraries.forEach((lib) => {
   const libPath = path.resolve(__dirname, '../dist', lib);
-  
+
   if (fs.existsSync(libPath)) {
     const pkgPath = path.join(libPath, 'package.json');
     let publishCmd = 'npm publish --access public';
@@ -22,23 +22,28 @@ libraries.forEach(lib => {
           publishCmd += ' --tag next';
         }
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.warn(`Unable to read version for ${lib}:`, e.message);
       }
     } else {
+      // eslint-disable-next-line no-console
       console.warn(`package.json not found in ${libPath}`);
     }
-
+    // eslint-disable-next-line no-console
     console.log(`Publishing ${lib}${versionInfo} with: ${publishCmd}`);
     try {
-      execSync(publishCmd, { 
+      execSync(publishCmd, {
         cwd: libPath,
-        stdio: 'inherit'
+        stdio: 'inherit',
       });
+      // eslint-disable-next-line no-console
       console.log(`Successfully published ${lib}`);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(`Failed to publish ${lib}:`, error);
     }
   } else {
+    // eslint-disable-next-line no-console
     console.error(`Library path not found: ${libPath}`);
   }
 });

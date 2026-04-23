@@ -19,10 +19,7 @@ import { flip, offset, useFloating } from '@floating-ui/react';
 import { Island } from '../../island';
 import classNames from 'classnames';
 import { useI18n } from '../../../i18n';
-import {
-  getStrokeColorByElement as getStrokeColorByMindElement,
-  MindElement,
-} from '@plait/mind';
+import { getStrokeColorByElement as getStrokeColorByMindElement, MindElement } from '@plait/mind';
 import './popup-toolbar.scss';
 import {
   ArrowLineHandle,
@@ -83,18 +80,14 @@ export const PopupToolbar = () => {
     const hasFill =
       selectedElements.some((value) => hasFillProperty(board, value)) &&
       !PlaitBoard.hasBeenTextEditing(board);
-    const hasText = selectedElements.some((value) =>
-      hasTextProperty(board, value)
-    );
+    const hasText = selectedElements.some((value) => hasTextProperty(board, value));
     const hasStroke =
       selectedElements.some((value) => hasStrokeProperty(board, value)) &&
       !PlaitBoard.hasBeenTextEditing(board);
     const hasStrokeStyle =
       selectedElements.some((value) => hasStrokeStyleProperty(board, value)) &&
       !PlaitBoard.hasBeenTextEditing(board);
-    const isLine = selectedElements.every((value) =>
-      PlaitDrawElement.isArrowLine(value)
-    );
+    const isLine = selectedElements.every((value) => PlaitDrawElement.isArrowLine(value));
     state = {
       ...getElementState(board),
       hasFill,
@@ -148,20 +141,14 @@ export const PopupToolbar = () => {
     const { pointerUp, pointerMove } = board;
 
     board.pointerMove = (event: PointerEvent) => {
-      if (
-        (isMovingElements(board) || isDragging(board)) &&
-        !movingOrDraggingRef.current
-      ) {
+      if ((isMovingElements(board) || isDragging(board)) && !movingOrDraggingRef.current) {
         setMovingOrDragging(true);
       }
       pointerMove(event);
     };
 
     board.pointerUp = (event: PointerEvent) => {
-      if (
-        movingOrDraggingRef.current &&
-        (isMovingElements(board) || isDragging(board))
-      ) {
+      if (movingOrDraggingRef.current && (isMovingElements(board) || isDragging(board))) {
         setMovingOrDragging(false);
       }
       pointerUp(event);
@@ -197,9 +184,7 @@ export const PopupToolbar = () => {
                 key={0}
                 currentColor={state.marks?.color}
                 title={t('popupToolbar.fontColor')}
-                fontColorIcon={
-                  <FontColorIcon currentColor={state.marks?.color} />
-                }
+                fontColorIcon={<FontColorIcon currentColor={state.marks?.color} />}
               ></PopupFontColorButton>
             )}
             {state.hasStroke && (
@@ -226,8 +211,7 @@ export const PopupToolbar = () => {
               >
                 <label
                   className={classNames('fill-label', 'color-label', {
-                    'color-white':
-                      state.fill && isWhite(removeHexAlpha(state.fill)),
+                    'color-white': state.fill && isWhite(removeHexAlpha(state.fill)),
                   })}
                   style={{ backgroundColor: state.fill }}
                 ></label>
@@ -242,18 +226,8 @@ export const PopupToolbar = () => {
             )}
             {state.isLine && (
               <>
-                <ArrowMarkButton
-                  board={board}
-                  key={4}
-                  end={'source'}
-                  endProperty={state.source}
-                />
-                <ArrowMarkButton
-                  board={board}
-                  key={5}
-                  end={'target'}
-                  endProperty={state.target}
-                />
+                <ArrowMarkButton board={board} key={4} end={'source'} endProperty={state.source} />
+                <ArrowMarkButton board={board} key={5} end={'target'} endProperty={state.target} />
               </>
             )}
             <MoreOptionsButton board={board} key={6} />
@@ -264,10 +238,7 @@ export const PopupToolbar = () => {
   );
 };
 
-export const getMindElementState = (
-  board: PlaitBoard,
-  element: MindElement
-) => {
+export const getMindElementState = (board: PlaitBoard, element: MindElement) => {
   const marks = getTextMarksByElement(element);
   return {
     fill: element.fill,
@@ -277,10 +248,7 @@ export const getMindElementState = (
   };
 };
 
-export const getDrawElementState = (
-  board: PlaitBoard,
-  element: PlaitDrawElement
-) => {
+export const getDrawElementState = (board: PlaitBoard, element: PlaitDrawElement) => {
   const marks: Omit<CustomText, 'text'> = getTextMarksByElement(element);
   return {
     fill: element.fill,
@@ -338,10 +306,7 @@ export const hasStrokeProperty = (board: PlaitBoard, element: PlaitElement) => {
   return false;
 };
 
-export const hasStrokeStyleProperty = (
-  board: PlaitBoard,
-  element: PlaitElement
-) => {
+export const hasStrokeStyleProperty = (board: PlaitBoard, element: PlaitElement) => {
   return hasStrokeProperty(board, element);
 };
 

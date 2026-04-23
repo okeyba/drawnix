@@ -43,9 +43,29 @@ export default defineConfig({
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
-      external: ['react', 'react-dom', 'react/jsx-runtime', 'slate', 'slate-react', 'slate-history', 'is-hotkey', '@plait/text-plugins', '@plait/common'],
+      external: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        'slate',
+        'slate-react',
+        'slate-history',
+        'is-hotkey',
+        '@plait/text-plugins',
+        '@plait/common',
+      ],
     },
   },
+
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    coverage: {
+      reportsDirectory: '../../coverage/packages/react-text',
+    },
+  },
+
   resolve: {
     alias: {
       '@plait': path.resolve(__dirname, 'src'), // 根据项目结构调整路径

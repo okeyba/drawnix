@@ -48,11 +48,7 @@ export const blobToArrayBuffer = (blob: Blob): Promise<ArrayBuffer> => {
 export const normalizeFile = async (file: File) => {
   if (!file.type) {
     if (file?.name?.endsWith('.drawnix')) {
-      file = createFile(
-        await blobToArrayBuffer(file),
-        MIME_TYPES.drawnix,
-        file.name
-      );
+      file = createFile(await blobToArrayBuffer(file), MIME_TYPES.drawnix, file.name);
     }
   }
   return file;
