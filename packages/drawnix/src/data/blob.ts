@@ -13,6 +13,7 @@ export const loadFromBlob = async (board: PlaitBoard, blob: Blob | File) => {
       return data;
     }
     throw new Error('Error: invalid file');
+    // eslint-disable-next-line no-unused-vars
   } catch (error: any) {
     throw new Error('Error: invalid file');
   }

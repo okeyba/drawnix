@@ -1,13 +1,6 @@
 import { ExportImageIcon, GithubIcon, OpenFileIcon, SaveFileIcon, TrashIcon } from '../../icons';
 import { useBoard, useListRender } from '@plait-board/react-board';
-import {
-  BoardTransforms,
-  PlaitBoard,
-  PlaitElement,
-  PlaitTheme,
-  ThemeColorMode,
-  Viewport,
-} from '@plait/core';
+import { BoardTransforms, PlaitBoard, PlaitElement, PlaitTheme, Viewport } from '@plait/core';
 import { loadFromJSON, saveAsJSON } from '../../../data/json';
 import MenuItem from '../../menu/menu-item';
 import MenuItemLink from '../../menu/menu-item-link';

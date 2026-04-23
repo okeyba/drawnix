@@ -3,7 +3,6 @@ import {
   PlaitPluginElementContext,
   OnContextChanged,
   RectangleClient,
-  isSelectionMoving,
   ACTIVE_STROKE_WIDTH,
 } from '@plait/core';
 import {

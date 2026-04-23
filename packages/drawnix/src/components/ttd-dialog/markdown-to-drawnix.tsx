@@ -30,6 +30,7 @@ const MarkdownToDrawnix = () => {
   const [markdownToDrawnixLib, setMarkdownToDrawnixLib] = useState<MarkdownToDrawnixLibProps>({
     loaded: false,
     api: Promise.resolve({
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       parseMarkdownToDrawnix: (definition: string, mainTopic?: string) =>
         null as any as MindElement,
     }),
@@ -50,6 +51,7 @@ const MarkdownToDrawnix = () => {
       }
     };
     loadLib();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [text, setText] = useState(() => t('markdown.example'));
   const [value, setValue] = useState<PlaitElement[]>(() => []);
@@ -60,6 +62,7 @@ const MarkdownToDrawnix = () => {
   // Update markdown example when language changes
   useEffect(() => {
     setText(t('markdown.example'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language]);
 
   useEffect(() => {
@@ -69,6 +72,7 @@ const MarkdownToDrawnix = () => {
         let ret;
         try {
           ret = await api.parseMarkdownToDrawnix(deferredText);
+          // eslint-disable-next-line no-unused-vars
         } catch (err: any) {
           ret = await api.parseMarkdownToDrawnix(deferredText.replace(/"/g, "'"));
         }

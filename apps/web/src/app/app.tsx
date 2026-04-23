@@ -50,6 +50,7 @@ export function App() {
         }
       }}
       tutorial={tutorial}
+      // eslint-disable-next-line no-unused-vars
       afterInit={(board) => {
         // eslint-disable-next-line no-console
         console.log('board initialized');
@@ -65,6 +66,7 @@ export function App() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const addDebugLog = (board: PlaitBoard, value: string) => {
   const container = PlaitBoard.getBoardContainer(board).closest('.drawnix') as HTMLElement;
   let consoleContainer = container.querySelector('.drawnix-console');

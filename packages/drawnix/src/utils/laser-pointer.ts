@@ -50,6 +50,7 @@ export class LaserPointer {
         y: relativeY,
         time: Date.now(),
       });
+      // eslint-disable-next-line no-unused-expressions
       this.ctx && this.startDraw();
     };
 

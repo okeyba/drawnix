@@ -126,6 +126,7 @@ export const Wrapper: React.FC<WrapperProps> = ({
       board,
       listRender,
     }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [board, onChange, onSelectionChange, onValueChange]);
 
   useEffect(() => {
@@ -177,6 +178,7 @@ export const Wrapper: React.FC<WrapperProps> = ({
       BOARD_TO_ON_CHANGE.delete(board);
       BOARD_TO_AFTER_CHANGE.delete(board);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [board]);
 
   const isFirstRender = useRef(true);
@@ -199,6 +201,7 @@ export const Wrapper: React.FC<WrapperProps> = ({
       });
       BoardTransforms.fitViewport(board);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   return <BoardContext.Provider value={context}>{children}</BoardContext.Provider>;

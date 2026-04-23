@@ -16,6 +16,7 @@ export const withReact = (board: PlaitBoard & PlaitTextBoard) => {
         {...props}
         afterInit={(editor) => {
           currentEditor = editor as ReactEditor;
+          // eslint-disable-next-line no-unused-expressions
           props.afterInit && props.afterInit(editor);
         }}
       ></Text>

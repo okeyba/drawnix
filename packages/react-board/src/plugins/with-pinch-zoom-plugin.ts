@@ -27,6 +27,7 @@ export const withPinchZoom = (board: PlaitBoard) => {
   const { touchStart, touchMove, touchEnd } = board;
 
   let pointerRecords: PointerRecord[] = [];
+  // eslint-disable-next-line no-unused-vars
   let initializeZoom = 0;
   let isPinching = false;
 

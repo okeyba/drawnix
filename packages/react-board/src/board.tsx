@@ -92,6 +92,7 @@ export const Board: React.FC<PlaitBoardProps> = ({ style, className, children, a
       BOARD_TO_ROUGH_SVG.delete(board);
       KEY_TO_ELEMENT_MAP.delete(board);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useBoardPluginEvent(board, viewportContainerRef, hostRef);

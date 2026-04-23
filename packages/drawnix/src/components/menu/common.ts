@@ -16,6 +16,7 @@ export const useHandleMenuItemClick = (
 ) => {
   const menuContentProps = useContext(MenuContentPropsContext);
 
+  // eslint-disable-next-line no-unused-vars
   return composeEventHandlers(origOnClick, (event) => {
     const itemSelectEvent = new CustomEvent(EVENT.MENU_ITEM_SELECT, {
       bubbles: true,

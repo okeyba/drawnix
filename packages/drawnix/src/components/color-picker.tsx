@@ -20,6 +20,7 @@ export type ColorPickerProps = {
   hideOpacitySlider?: boolean;
 };
 
+// eslint-disable-next-line no-unused-vars
 export const ColorPicker = React.forwardRef((props: ColorPickerProps, ref) => {
   const board = useBoard();
   const { t } = useI18n();

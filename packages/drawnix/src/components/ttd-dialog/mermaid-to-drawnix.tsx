@@ -59,6 +59,7 @@ const MermaidToDrawnix = () => {
       }
     };
     loadLib();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [text, setText] = useState(() => MERMAID_EXAMPLE);
   const [value, setValue] = useState<PlaitElement[]>(() => []);
@@ -73,6 +74,7 @@ const MermaidToDrawnix = () => {
         let ret;
         try {
           ret = await api.parseMermaidToDrawnix(deferredText);
+          // eslint-disable-next-line no-unused-vars
         } catch (err: any) {
           ret = await api.parseMermaidToDrawnix(deferredText.replace(/"/g, "'"));
         }

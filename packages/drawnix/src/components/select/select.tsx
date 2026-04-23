@@ -224,6 +224,7 @@ interface SelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(
   (
+    // eslint-disable-next-line no-unused-vars
     { children, className, variant = 'surface', color, radius, placeholder, asChild, ...props },
     forwardedRef
   ) => {
@@ -285,6 +286,7 @@ interface SelectContentProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(
   (
+    // eslint-disable-next-line no-unused-vars
     { children, className, variant = 'solid', color, highContrast, container, style, ...props },
     forwardedRef
   ) => {

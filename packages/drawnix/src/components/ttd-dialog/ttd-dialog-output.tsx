@@ -18,7 +18,7 @@ interface TTDDialogOutputProps {
   value: PlaitElement[];
   loaded: boolean;
 }
-
+// eslint-disable-next-line no-unused-vars
 export const TTDDialogOutput = ({ error, value, loaded }: TTDDialogOutputProps) => {
   const plugins: PlaitPlugin[] = [withDraw, withMind, withGroup, withCommonPlugin];
   const options = {

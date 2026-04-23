@@ -41,6 +41,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({ children, defaultLan
       setLanguage,
       t,
     }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [language]
   );
 

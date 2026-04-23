@@ -131,6 +131,7 @@ export const PopupToolbar = () => {
         });
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewport, selection, children, movingOrDragging]);
 
   useEffect(() => {

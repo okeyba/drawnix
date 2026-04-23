@@ -10,9 +10,8 @@ import {
 } from '@plait/common';
 import React, { useMemo, useCallback, useEffect, CSSProperties } from 'react';
 import { withHistory } from 'slate-history';
-import { isUrl, LinkEditor } from '@plait/text-plugins';
 import { withText } from './plugins/with-text';
-import { CustomEditor, RenderElementPropsFor } from './custom-types';
+import { RenderElementPropsFor } from './custom-types';
 
 import './styles/index.scss';
 import { LinkComponent, withInlineLink } from './plugins/with-link';
@@ -28,8 +27,10 @@ export const Text: React.FC<TextComponentProps> = (props: TextComponentProps) =>
 
   const editor = useMemo(() => {
     const editor = withInlineLink(withText(withHistory(withReact(createEditor()))));
+    // eslint-disable-next-line no-unused-expressions
     afterInit && afterInit(editor);
     return editor;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -68,7 +69,9 @@ export const Text: React.FC<TextComponentProps> = (props: TextComponentProps) =>
     <Slate
       editor={editor}
       initialValue={initialValue}
+      // eslint-disable-next-line no-unused-vars
       onChange={(value: Descendant[]) => {
+        // eslint-disable-next-line no-unused-expressions
         onChange &&
           onChange({
             newText: editor.children[0] as ParagraphElement,
@@ -103,6 +106,7 @@ export const Text: React.FC<TextComponentProps> = (props: TextComponentProps) =>
 };
 
 const Element = (props: RenderElementProps) => {
+  // eslint-disable-next-line no-unused-vars
   const { attributes, children, element } = props as RenderElementPropsFor<
     CustomElement & { type: string }
   >;

@@ -63,6 +63,7 @@ export const LinkPopup = () => {
         },
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [board.viewport, target]);
 
   useEffect(() => {
@@ -85,6 +86,7 @@ export const LinkPopup = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const saveUrlAndExitEditing = () => {

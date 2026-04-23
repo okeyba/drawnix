@@ -44,6 +44,7 @@ const useBoardEvent = (
       // https://github.com/excalidraw/excalidraw/blob/b7d7ccc929696cc17b4cc34452e4afd846d59f4f/src/components/App.tsx#L9060
       if (event.metaKey || event.ctrlKey) {
         event.preventDefault();
+        // eslint-disable-next-line no-unused-vars
         const { deltaX, deltaY } = event;
         const zoom = board.viewport.zoom;
         const sign = Math.sign(deltaY);
@@ -80,8 +81,10 @@ const useBoardEvent = (
     });
     resizeObserver.observe(PlaitBoard.getBoardContainer(board));
     return () => {
+      // eslint-disable-next-line no-unused-expressions
       resizeObserver && (resizeObserver as ResizeObserver).disconnect();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 };
 

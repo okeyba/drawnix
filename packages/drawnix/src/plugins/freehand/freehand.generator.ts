@@ -24,6 +24,7 @@ export class FreehandGenerator extends Generator<Freehand> {
     return g;
   }
 
+  // eslint-disable-next-line no-unused-vars
   canDraw(element: Freehand): boolean {
     return true;
   }

@@ -129,6 +129,7 @@ export const Drawnix: React.FC<DrawnixProps> = ({
             options={options}
             plugins={plugins}
             onChange={(data: BoardChangeData) => {
+              // eslint-disable-next-line no-unused-expressions
               onChange && onChange(data);
             }}
             onSelectionChange={onSelectionChange}
@@ -139,6 +140,7 @@ export const Drawnix: React.FC<DrawnixProps> = ({
             <Board
               afterInit={(board) => {
                 setBoard(board as DrawnixBoard);
+                // eslint-disable-next-line no-unused-expressions
                 afterInit && afterInit(board);
               }}
             >
