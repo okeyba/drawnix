@@ -1,10 +1,6 @@
-import { fileURLToPath } from 'node:url';
 import { defineConfig, devices } from '@playwright/test';
-import { nxE2EPreset } from '@nx/playwright/preset';
 
 import { workspaceRoot } from '@nx/devkit';
-
-const __filename = fileURLToPath(import.meta.url);
 
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:7200';
@@ -19,7 +15,31 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:7200';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  ...nxE2EPreset(__filename, { testDir: './src' }),
+  testDir: './src',
+  outputDir: '../../dist/.playwright/apps/web-e2e/test-output',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: [
+    [
+      'html',
+      {
+        outputFolder: '../../dist/.playwright/apps/web-e2e/playwright-report',
+        open: 'on-failure',
+      },
+    ],
+    ...(process.env.CI
+      ? [
+          [
+            'blob' as const,
+            {
+              outputDir: '../../dist/.playwright/apps/web-e2e/blob-report',
+            },
+          ],
+        ]
+      : []),
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,

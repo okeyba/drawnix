@@ -32,6 +32,10 @@ jobs:
       # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
       - uses: nrwl/nx-set-shas@v5
 
+      # Install Playwright browsers and OS dependencies for e2e tests
+      - name: Install Playwright
+        run: npx playwright install --with-deps
+
       # Lint (oxlint)
       - name: Lint code
         run: npm run lint
@@ -47,3 +51,7 @@ jobs:
       # Build
       - name: Build packages
         run: npx nx affected -t build --base=origin/develop --parallel 1 --verbose
+
+      # E2E (Playwright)
+      - name: Run e2e tests
+        run: npx nx affected -t e2e --base=origin/develop --parallel 1 --verbose
