@@ -41,6 +41,7 @@ import { I18nProvider } from './i18n';
 import { Tutorial } from './components/tutorial';
 import { LASER_POINTER_CLASS_NAME } from './utils/laser-pointer';
 import { DEFAULT_FREEHAND_PRESETS } from './plugins/freehand/presets';
+import { withLatexBlockRendering } from './plugins/with-latex';
 
 export type DrawnixProps = {
   value: PlaitElement[];
@@ -113,6 +114,7 @@ export const Drawnix: React.FC<DrawnixProps> = ({
     withFreehand,
     buildPencilPlugin(updateAppState),
     buildTextLinkPlugin(updateAppState),
+    withLatexBlockRendering,
   ];
 
   const containerRef = useRef<HTMLDivElement>(null);

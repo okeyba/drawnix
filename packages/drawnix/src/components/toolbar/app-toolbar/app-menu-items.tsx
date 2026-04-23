@@ -25,6 +25,7 @@ import { useContext } from 'react';
 import { MenuContentPropsContext } from '../../menu/common';
 import { EVENT } from '../../../constants';
 import { getShortcutKey } from '../../../utils/common';
+import { cacheLatexElementSizes } from '../../../plugins/with-latex';
 
 export const SaveToFile = () => {
   const board = useBoard();
@@ -57,6 +58,7 @@ export const OpenFile = () => {
     if (theme) {
       board.theme = theme;
     }
+    cacheLatexElementSizes(board, board.children);
     listRender.update(board.children, {
       board: board,
       parent: board,

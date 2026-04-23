@@ -1,4 +1,12 @@
-import { createEditor, type Descendant, Range, Transforms } from 'slate';
+import {
+  createEditor,
+  type Descendant,
+  Element as SlateElement,
+  Node,
+  Range,
+  Text as SlateText,
+  Transforms,
+} from 'slate';
 import { isKeyHotkey } from 'is-hotkey';
 import {
   Editable,
@@ -22,6 +30,12 @@ import { CustomEditor, RenderElementPropsFor } from './custom-types';
 
 import './styles/index.scss';
 import { LinkComponent, withInlineLink } from './plugins/with-link';
+import {
+  hasLatexBlocksInTextElement,
+  parseLatexBlocks,
+  renderLatexToString,
+} from './latex';
+import 'katex/dist/katex.min.css';
 
 export type TextComponentProps = TextProps;
 
@@ -29,6 +43,8 @@ export const Text: React.FC<TextComponentProps> = (
   props: TextComponentProps
 ) => {
   const { text, readonly, onChange, onComposition, afterInit } = props;
+
+  const isReadonly = readonly === undefined ? true : readonly;
 
   const renderLeaf = useCallback(
     (props: RenderLeafProps) => <Leaf {...props} />,
@@ -91,9 +107,11 @@ export const Text: React.FC<TextComponentProps> = (
     >
       <Editable
         className="slate-editable-container plait-text-container"
-        renderElement={(props) => <Element {...props} />}
+        renderElement={(props) => (
+          <Element {...props} renderLatex={isReadonly} />
+        )}
         renderLeaf={renderLeaf}
-        readOnly={readonly === undefined ? true : readonly}
+        readOnly={isReadonly}
         onCompositionStart={(event) => {
           if (onComposition) {
             onComposition(event as unknown as CompositionEvent);
@@ -115,10 +133,16 @@ export const Text: React.FC<TextComponentProps> = (
   );
 };
 
-const Element = (props: RenderElementProps) => {
+const Element = (
+  props: RenderElementProps & {
+    renderLatex: boolean;
+  }
+) => {
   const { attributes, children, element } = props as RenderElementPropsFor<
     CustomElement & { type: string }
-  >;
+  > & {
+    renderLatex: boolean;
+  };
   switch (element.type) {
     case 'link':
       return (
@@ -128,6 +152,7 @@ const Element = (props: RenderElementProps) => {
       return (
         <ParagraphComponent
           {...(props as RenderElementPropsFor<ParagraphElement>)}
+          renderLatex={props.renderLatex}
         />
       );
   }
@@ -137,11 +162,20 @@ const ParagraphComponent = ({
   attributes,
   children,
   element,
-}: RenderElementPropsFor<ParagraphElement>) => {
+  renderLatex,
+}: RenderElementPropsFor<ParagraphElement> & { renderLatex: boolean }) => {
   const style = { textAlign: element.align } as CSSProperties;
+  const shouldRenderLatex = renderLatex && hasLatexBlocksInTextElement(element);
   return (
     <div style={style} {...attributes}>
-      {children}
+      {shouldRenderLatex ? (
+        <>
+          <LatexTextContent element={element} />
+          <span hidden>{children}</span>
+        </>
+      ) : (
+        children
+      )}
     </div>
   );
 };
@@ -165,7 +199,7 @@ const Leaf: React.FC<RenderLeafProps> = ({ children, leaf, attributes }) => {
 
   const fontSizeValue = (leaf as CustomText)['font-size'];
   const style: CSSProperties = {
-    color: (leaf as CustomText).color
+    color: (leaf as CustomText).color,
   };
 
   return (
@@ -177,4 +211,154 @@ const Leaf: React.FC<RenderLeafProps> = ({ children, leaf, attributes }) => {
       {children}
     </span>
   );
+};
+
+type FlattenedTextLeaf = {
+  end: number;
+  marks: Omit<CustomText, 'text'>;
+  start: number;
+  text: string;
+  url?: string;
+};
+
+const LatexTextContent = ({ element }: { element: ParagraphElement }) => {
+  const leaves = flattenTextLeaves(element);
+  const text = Node.string(element);
+  const segments = parseLatexBlocks(text);
+  return (
+    <span className="plait-latex-text-container">
+      {segments.map((segment, index) => {
+        if (segment.type === 'latex') {
+          const marks = getMarksAtOffset(leaves, segment.start);
+          return (
+            <LatexBlock
+              formula={segment.formula}
+              key={`${segment.start}-${index}`}
+              marks={marks}
+            />
+          );
+        }
+        return renderTextRange(leaves, segment.start, segment.end, index);
+      })}
+    </span>
+  );
+};
+
+const LatexBlock = ({
+  formula,
+  marks,
+}: {
+  formula: string;
+  marks?: Omit<CustomText, 'text'>;
+}) => {
+  return (
+    <span
+      className="plait-latex-block"
+      style={{ color: marks?.color }}
+      dangerouslySetInnerHTML={{ __html: renderLatexToString(formula) }}
+    />
+  );
+};
+
+const flattenTextLeaves = (element: ParagraphElement) => {
+  const leaves: FlattenedTextLeaf[] = [];
+  let offset = 0;
+
+  const visit = (node: Node, inheritedUrl?: string) => {
+    if (SlateText.isText(node)) {
+      const text = node.text;
+      const start = offset;
+      offset += text.length;
+      leaves.push({
+        end: offset,
+        marks: node,
+        start,
+        text,
+        url: inheritedUrl,
+      });
+      return;
+    }
+
+    if (SlateElement.isElement(node)) {
+      const url =
+        (node as LinkElement).type === 'link'
+          ? (node as LinkElement).url
+          : inheritedUrl;
+      node.children.forEach((child) => visit(child, url));
+    }
+  };
+
+  visit(element);
+  return leaves;
+};
+
+const renderTextRange = (
+  leaves: FlattenedTextLeaf[],
+  start: number,
+  end: number,
+  segmentIndex: number
+) => {
+  return leaves
+    .filter((leaf) => leaf.end > start && leaf.start < end)
+    .map((leaf, index) => {
+      const sliceStart = Math.max(start, leaf.start) - leaf.start;
+      const sliceEnd = Math.min(end, leaf.end) - leaf.start;
+      const text = leaf.text.slice(sliceStart, sliceEnd);
+      const content = renderTextWithBreaks(text);
+      const style = getLeafStyle(leaf.marks);
+      const key = `${segmentIndex}-${leaf.start}-${index}`;
+
+      if (leaf.url) {
+        return (
+          <a
+            className="drawnix-link"
+            href={leaf.url}
+            key={key}
+            rel="noreferrer"
+            style={style}
+            target="_blank"
+          >
+            {content}
+          </a>
+        );
+      }
+
+      return (
+        <span key={key} style={style}>
+          {content}
+        </span>
+      );
+    });
+};
+
+const renderTextWithBreaks = (text: string) => {
+  return text.split('\n').map((line, index, lines) => (
+    <React.Fragment key={`${index}-${line}`}>
+      {line}
+      {index < lines.length - 1 && <br />}
+    </React.Fragment>
+  ));
+};
+
+const getMarksAtOffset = (
+  leaves: FlattenedTextLeaf[],
+  offset: number
+): Omit<CustomText, 'text'> | undefined => {
+  return leaves.find((leaf) => leaf.start <= offset && leaf.end >= offset)
+    ?.marks;
+};
+
+const getLeafStyle = (leaf: Omit<CustomText, 'text'>): CSSProperties => {
+  const fontSizeValue = leaf['font-size'];
+  return {
+    color: leaf.color,
+    fontSize: fontSizeValue ? `${fontSizeValue}px` : undefined,
+    fontStyle: leaf.italic ? 'italic' : undefined,
+    fontWeight: leaf.bold ? 'bold' : undefined,
+    lineHeight: fontSizeValue ? 1.5 : undefined,
+    textDecoration:
+      [leaf.underlined ? 'underline' : '', leaf.strike ? 'line-through' : '']
+        .filter(Boolean)
+        .join(' ') || undefined,
+  };
 };

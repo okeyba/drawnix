@@ -11,7 +11,8 @@
     "slate-react": "^0.116.0",
     "@plait/text-plugins": "^0.93.1",
     "@plait/common": "^0.93.1",
-    "is-hotkey": "^0.2.0"
+    "is-hotkey": "^0.2.0",
+    "katex": "^0.16.21"
   },
   "exports": {
     ".": {
