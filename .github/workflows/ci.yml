@@ -32,9 +32,13 @@ jobs:
       # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
       - uses: nrwl/nx-set-shas@v5
 
-      # Lint (oxlint + oxfmt)
+      # Lint (oxlint)
       - name: Lint code
         run: npm run lint
+
+      # Format check (oxfmt)
+      - name: Check formatting
+        run: npm run format:check
 
       # Test (Vitest)
       - name: Run tests
