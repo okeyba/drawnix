@@ -38,8 +38,8 @@ jobs:
 
       # Test (Vitest)
       - name: Run tests
-        run: npx nx affected -t test --base=origin/develop --parallel auto --verbose
+        run: npx nx affected -t test --base=origin/develop --parallel 1 --verbose
 
       # Build
       - name: Build packages
-        run: npx nx affected -t build --base=origin/develop --parallel auto --verbose
+        run: npx nx affected -t build --base=origin/develop --parallel 1 --verbose
