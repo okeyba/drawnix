@@ -32,7 +32,7 @@ export default defineConfig({
     ...(process.env.CI
       ? [
           [
-            'blob' as const,
+            'blob',
             {
               outputDir: '../../dist/.playwright/apps/web-e2e/blob-report',
             },
