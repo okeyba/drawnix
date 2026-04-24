@@ -6,17 +6,13 @@ import { DataURL } from '../types';
 
 export const loadFromBlob = async (board: PlaitBoard, blob: Blob | File) => {
   const contents = await parseFileContents(blob);
-  let data;
   try {
-    data = JSON.parse(contents);
+    const data = JSON.parse(contents);
     if (isValidDrawnixData(data)) {
       return data;
     }
-    throw new Error('Error: invalid file');
-    // eslint-disable-next-line no-unused-vars
-  } catch (error: any) {
-    throw new Error('Error: invalid file');
-  }
+  } catch {}
+  throw new Error('Error: invalid file');
 };
 
 export const createFile = (
