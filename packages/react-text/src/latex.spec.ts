@@ -5,7 +5,12 @@ jest.mock('@plait/common', () => ({
   updateElementSizeCache: jest.fn(),
 }));
 
-import { hasLatexBlocks, parseLatexBlocks, renderLatexToString } from './latex';
+import {
+  hasLatexBlocks,
+  parseLatexBlocks,
+  renderLatexTextToHtml,
+  renderLatexToString,
+} from './latex';
 
 describe('latex blocks', () => {
   it('keeps plain text as a text segment', () => {
@@ -15,38 +20,16 @@ describe('latex blocks', () => {
     expect(hasLatexBlocks('plain text')).toBe(false);
   });
 
-  it('parses a single latex block', () => {
+  it('keeps explicit latex block markers as plain text', () => {
     expect(parseLatexBlocks('A \\latex x^2 \\endlatex B')).toEqual([
-      { type: 'text', text: 'A ', start: 0, end: 2 },
-      {
-        type: 'latex',
-        formula: 'x^2',
-        source: '\\latex x^2 \\endlatex',
-        start: 2,
-        end: 22,
-      },
-      { type: 'text', text: ' B', start: 22, end: 24 },
+      { type: 'text', text: 'A \\latex x^2 \\endlatex B', start: 0, end: 24 },
     ]);
   });
 
-  it('parses multiple and multiline latex blocks', () => {
+  it('keeps multiline explicit latex blocks as plain text', () => {
     const input = '\\latex x \\endlatex\nand\n\\latex y \\\\ z \\endlatex';
     expect(parseLatexBlocks(input)).toEqual([
-      {
-        type: 'latex',
-        formula: 'x',
-        source: '\\latex x \\endlatex',
-        start: 0,
-        end: 18,
-      },
-      { type: 'text', text: '\nand\n', start: 18, end: 23 },
-      {
-        type: 'latex',
-        formula: 'y \\\\ z',
-        source: '\\latex y \\\\ z \\endlatex',
-        start: 23,
-        end: 46,
-      },
+      { type: 'text', text: input, start: 0, end: 46 },
     ]);
   });
 
@@ -56,8 +39,60 @@ describe('latex blocks', () => {
     ]);
   });
 
+  it('parses common inline latex delimiters', () => {
+    expect(parseLatexBlocks('A \\(x^2\\) B')).toEqual([
+      { type: 'text', text: 'A ', start: 0, end: 2 },
+      {
+        type: 'latex',
+        displayMode: false,
+        formula: 'x^2',
+        source: '\\(x^2\\)',
+        start: 2,
+        end: 9,
+      },
+      { type: 'text', text: ' B', start: 9, end: 11 },
+    ]);
+  });
+
+  it('parses common display latex delimiters', () => {
+    expect(parseLatexBlocks('A \\[x^2\\] B')).toEqual([
+      { type: 'text', text: 'A ', start: 0, end: 2 },
+      {
+        type: 'latex',
+        displayMode: true,
+        formula: 'x^2',
+        source: '\\[x^2\\]',
+        start: 2,
+        end: 9,
+      },
+      { type: 'text', text: ' B', start: 9, end: 11 },
+    ]);
+  });
+
+  it('keeps dollar-delimited text unchanged for now', () => {
+    expect(parseLatexBlocks('A $x$ and $$y$$')).toEqual([
+      { type: 'text', text: 'A $x$ and $$y$$', start: 0, end: 15 },
+    ]);
+  });
+
   it('renders invalid latex without throwing', () => {
     expect(() => renderLatexToString('\\badcommand{')).not.toThrow();
     expect(renderLatexToString('\\badcommand{')).toContain('katex');
+  });
+
+  it('omits marker line breaks around rendered latex blocks', () => {
+    const html = renderLatexTextToHtml({
+      children: [
+        {
+          text: 'plain text\n\\[\nE = mc^2\n\\]\nafter text',
+        },
+      ],
+    } as any);
+    expect(html.startsWith('plain text<span class="plait-latex-block">')).toBe(
+      true
+    );
+    expect(html.endsWith('</span>after text')).toBe(true);
+    expect(html).not.toContain('plain text<br />');
+    expect(html).not.toContain('<br />after text');
   });
 });

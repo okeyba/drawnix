@@ -55,16 +55,28 @@
 }
 
 .plait-latex-text-container {
+    display: block;
     white-space: pre-wrap;
     word-break: break-word;
+    text-align: inherit;
+    user-select: none;
+    -webkit-user-select: none;
+
+    .plait-latex-inline {
+        display: inline-block;
+        vertical-align: baseline;
+        white-space: normal;
+    }
 
     .plait-latex-block {
         display: block;
         overflow: visible;
+        text-align: inherit;
 
         .katex-display {
-            margin: 0.2em 0;
+            margin: 0;
             overflow: visible;
+            text-align: inherit;
         }
     }
 }

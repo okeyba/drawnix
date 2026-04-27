@@ -12,9 +12,6 @@ import type { PlaitBoard } from '@plait/core';
 import katex from 'katex';
 import { Element as SlateElement, Node, Text } from 'slate';
 
-export const LATEX_BLOCK_START = '\\latex';
-export const LATEX_BLOCK_END = '\\endlatex';
-
 export type LatexTextSegment =
   | {
       type: 'text';
@@ -24,6 +21,7 @@ export type LatexTextSegment =
     }
   | {
       type: 'latex';
+      displayMode: boolean;
       formula: string;
       source: string;
       start: number;
@@ -37,6 +35,11 @@ export type LatexMeasureOptions = {
   includeSourceSize?: boolean;
 };
 
+export type LatexTextRenderRange = {
+  start: number;
+  end: number;
+};
+
 const DEFAULT_FONT_SIZE = 14;
 const DEFAULT_MAX_WIDTH = 10000;
 
@@ -45,8 +48,8 @@ export const parseLatexBlocks = (input: string): LatexTextSegment[] => {
   let cursor = 0;
 
   while (cursor < input.length) {
-    const start = input.indexOf(LATEX_BLOCK_START, cursor);
-    if (start === -1) {
+    const nextSyntax = findNextLatexSyntax(input, cursor);
+    if (!nextSyntax) {
       segments.push({
         type: 'text',
         text: input.slice(cursor),
@@ -56,8 +59,9 @@ export const parseLatexBlocks = (input: string): LatexTextSegment[] => {
       break;
     }
 
-    const contentStart = start + LATEX_BLOCK_START.length;
-    const end = input.indexOf(LATEX_BLOCK_END, contentStart);
+    const { syntax, start } = nextSyntax;
+    const contentStart = start + syntax.startToken.length;
+    const end = findLatexSyntaxEnd(input, syntax, contentStart);
     if (end === -1) {
       segments.push({
         type: 'text',
@@ -68,6 +72,10 @@ export const parseLatexBlocks = (input: string): LatexTextSegment[] => {
       break;
     }
 
+    const sourceEnd = end + syntax.endToken.length;
+    const source = input.slice(start, sourceEnd);
+    const formula = input.slice(contentStart, end).trim();
+
     if (start > cursor) {
       segments.push({
         type: 'text',
@@ -77,11 +85,11 @@ export const parseLatexBlocks = (input: string): LatexTextSegment[] => {
       });
     }
 
-    const sourceEnd = end + LATEX_BLOCK_END.length;
     segments.push({
       type: 'latex',
-      formula: input.slice(contentStart, end).trim(),
-      source: input.slice(start, sourceEnd),
+      displayMode: syntax.displayMode,
+      formula,
+      source,
       start,
       end: sourceEnd,
     });
@@ -104,9 +112,16 @@ export const hasLatexBlocksInTextElement = (element: Node) => {
 };
 
 export const renderLatexToString = (formula: string) => {
+  return renderLatexFormulaToString(formula, true);
+};
+
+export const renderLatexFormulaToString = (
+  formula: string,
+  displayMode: boolean
+) => {
   try {
     return katex.renderToString(formula, {
-      displayMode: true,
+      displayMode,
       output: 'html',
       strict: false,
       throwOnError: false,
@@ -118,16 +133,52 @@ export const renderLatexToString = (formula: string) => {
 };
 
 export const renderLatexTextToHtml = (element: Node) => {
-  return parseLatexBlocks(Node.string(element))
-    .map((segment) => {
+  const segments = parseLatexBlocks(Node.string(element));
+  return segments
+    .map((segment, index) => {
       if (segment.type === 'latex') {
-        return `<span class="plait-latex-block">${renderLatexToString(
-          segment.formula
+        const className = segment.displayMode
+          ? 'plait-latex-block'
+          : 'plait-latex-inline';
+        return `<span class="${className}">${renderLatexFormulaToString(
+          segment.formula,
+          segment.displayMode
         )}</span>`;
       }
-      return escapeHtml(segment.text).replace(/\n/g, '<br />');
+      const range = getLatexTextRenderRange(segments, index);
+      return escapeHtml(
+        segment.text.slice(
+          range.start - segment.start,
+          range.end - segment.start
+        )
+      ).replace(/\n/g, '<br />');
     })
     .join('');
+};
+
+export const getLatexTextRenderRange = (
+  segments: LatexTextSegment[],
+  index: number
+): LatexTextRenderRange => {
+  const segment = segments[index];
+  if (!segment || segment.type !== 'text') {
+    return {
+      start: segment?.start || 0,
+      end: segment?.end || 0,
+    };
+  }
+
+  let start = segment.start;
+  let end = segment.end;
+
+  if (isDisplayLatexSegment(segments[index - 1])) {
+    start = skipLeadingNewline(segment.text, start);
+  }
+  if (isDisplayLatexSegment(segments[index + 1])) {
+    end = trimTrailingNewline(segment.text, segment.start, end);
+  }
+
+  return { start, end };
 };
 
 export const isParagraphTextElement = (
@@ -253,6 +304,99 @@ const escapeHtml = (input: string) => {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+};
+
+type LatexSyntax = {
+  displayMode: boolean;
+  endToken: string;
+  kind: 'display-bracket' | 'inline-paren';
+  startToken: string;
+};
+
+const LATEX_SYNTAXES: LatexSyntax[] = [
+  {
+    displayMode: true,
+    endToken: '\\]',
+    kind: 'display-bracket',
+    startToken: '\\[',
+  },
+  {
+    displayMode: false,
+    endToken: '\\)',
+    kind: 'inline-paren',
+    startToken: '\\(',
+  },
+];
+
+const findNextLatexSyntax = (input: string, cursor: number) => {
+  return LATEX_SYNTAXES.map((syntax) => ({
+    start: findLatexSyntaxStart(input, syntax, cursor),
+    syntax,
+  }))
+    .filter((value) => value.start !== -1)
+    .sort((a, b) => a.start - b.start)[0];
+};
+
+const findLatexSyntaxStart = (
+  input: string,
+  syntax: LatexSyntax,
+  cursor: number
+) => {
+  return findUnescapedToken(input, syntax.startToken, cursor);
+};
+
+const findLatexSyntaxEnd = (
+  input: string,
+  syntax: LatexSyntax,
+  cursor: number
+) => {
+  return findUnescapedToken(input, syntax.endToken, cursor);
+};
+
+const findUnescapedToken = (input: string, token: string, cursor: number) => {
+  let index = input.indexOf(token, cursor);
+  while (index !== -1 && isEscaped(input, index)) {
+    index = input.indexOf(token, index + token.length);
+  }
+  return index;
+};
+
+const isEscaped = (input: string, index: number) => {
+  let slashCount = 0;
+  for (let i = index - 1; i >= 0 && input[i] === '\\'; i--) {
+    slashCount++;
+  }
+  return slashCount % 2 === 1;
+};
+
+const isDisplayLatexSegment = (
+  segment: LatexTextSegment | undefined
+): segment is Extract<LatexTextSegment, { type: 'latex' }> => {
+  return segment?.type === 'latex' && segment.displayMode;
+};
+
+const skipLeadingNewline = (text: string, start: number) => {
+  if (text.startsWith('\r\n')) {
+    return start + 2;
+  }
+  if (text.startsWith('\n') || text.startsWith('\r')) {
+    return start + 1;
+  }
+  return start;
+};
+
+const trimTrailingNewline = (
+  text: string,
+  segmentStart: number,
+  end: number
+) => {
+  if (text.endsWith('\r\n')) {
+    return Math.max(segmentStart, end - 2);
+  }
+  if (text.endsWith('\n') || text.endsWith('\r')) {
+    return Math.max(segmentStart, end - 1);
+  }
+  return end;
 };
 
 const isObject = (value: unknown): value is Record<string, unknown> => {

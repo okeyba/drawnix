@@ -22,7 +22,13 @@ import {
   type ParagraphElement,
   type TextProps,
 } from '@plait/common';
-import React, { useMemo, useCallback, useEffect, CSSProperties } from 'react';
+import React, {
+  useMemo,
+  useCallback,
+  useEffect,
+  CSSProperties,
+  useRef,
+} from 'react';
 import { withHistory } from 'slate-history';
 import { isUrl, LinkEditor } from '@plait/text-plugins';
 import { withText } from './plugins/with-text';
@@ -31,9 +37,10 @@ import { CustomEditor, RenderElementPropsFor } from './custom-types';
 import './styles/index.scss';
 import { LinkComponent, withInlineLink } from './plugins/with-link';
 import {
+  getLatexTextRenderRange,
   hasLatexBlocksInTextElement,
   parseLatexBlocks,
-  renderLatexToString,
+  renderLatexFormulaToString,
 } from './latex';
 import 'katex/dist/katex.min.css';
 
@@ -45,6 +52,8 @@ export const Text: React.FC<TextComponentProps> = (
   const { text, readonly, onChange, onComposition, afterInit } = props;
 
   const isReadonly = readonly === undefined ? true : readonly;
+  const editableRef = useRef<HTMLDivElement | null>(null);
+  const shouldRenderLatex = isReadonly && hasLatexBlocksInTextElement(text);
 
   const renderLeaf = useCallback(
     (props: RenderLeafProps) => <Leaf {...props} />,
@@ -68,6 +77,29 @@ export const Text: React.FC<TextComponentProps> = (
     editor.children = [text];
     editor.onChange();
   }, [text, editor]);
+
+  useEffect(() => {
+    if (!shouldRenderLatex) {
+      return;
+    }
+
+    const handleCopy = (event: ClipboardEvent) => {
+      if (!editableRef.current || !isDomSelectionInside(editableRef.current)) {
+        return;
+      }
+
+      writePlainTextClipboard(event.clipboardData, Node.string(text));
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    document.addEventListener('copy', handleCopy, true);
+    document.addEventListener('cut', handleCopy, true);
+    return () => {
+      document.removeEventListener('copy', handleCopy, true);
+      document.removeEventListener('cut', handleCopy, true);
+    };
+  }, [shouldRenderLatex, text]);
 
   const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (event) => {
     const { selection } = editor;
@@ -106,6 +138,7 @@ export const Text: React.FC<TextComponentProps> = (
       }}
     >
       <Editable
+        ref={editableRef}
         className="slate-editable-container plait-text-container"
         renderElement={(props) => (
           <Element {...props} renderLatex={isReadonly} />
@@ -232,30 +265,36 @@ const LatexTextContent = ({ element }: { element: ParagraphElement }) => {
           const marks = getMarksAtOffset(leaves, segment.start);
           return (
             <LatexBlock
+              displayMode={segment.displayMode}
               formula={segment.formula}
               key={`${segment.start}-${index}`}
               marks={marks}
             />
           );
         }
-        return renderTextRange(leaves, segment.start, segment.end, index);
+        const range = getLatexTextRenderRange(segments, index);
+        return renderTextRange(leaves, range.start, range.end, index);
       })}
     </span>
   );
 };
 
 const LatexBlock = ({
+  displayMode,
   formula,
   marks,
 }: {
+  displayMode: boolean;
   formula: string;
   marks?: Omit<CustomText, 'text'>;
 }) => {
   return (
     <span
-      className="plait-latex-block"
+      className={displayMode ? 'plait-latex-block' : 'plait-latex-inline'}
       style={{ color: marks?.color }}
-      dangerouslySetInnerHTML={{ __html: renderLatexToString(formula) }}
+      dangerouslySetInnerHTML={{
+        __html: renderLatexFormulaToString(formula, displayMode),
+      }}
     />
   );
 };
@@ -361,4 +400,42 @@ const getLeafStyle = (leaf: Omit<CustomText, 'text'>): CSSProperties => {
         .filter(Boolean)
         .join(' ') || undefined,
   };
+};
+
+const isDomSelectionInside = (container: HTMLElement) => {
+  const selection = window.getSelection();
+  if (!selection || selection.isCollapsed || !selection.toString()) {
+    return false;
+  }
+
+  const anchorNode = selection.anchorNode;
+  const focusNode = selection.focusNode;
+  return (
+    (!!anchorNode && container.contains(anchorNode)) ||
+    (!!focusNode && container.contains(focusNode))
+  );
+};
+
+const writePlainTextClipboard = (
+  clipboardData: DataTransfer | null,
+  text: string
+) => {
+  if (!clipboardData) {
+    return;
+  }
+
+  clipboardData.setData('text/plain', text);
+  clipboardData.setData(
+    'text/html',
+    `<pre style="white-space: pre-wrap;">${escapeHtml(text)}</pre>`
+  );
+};
+
+const escapeHtml = (text: string) => {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 };
