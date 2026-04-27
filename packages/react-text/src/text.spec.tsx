@@ -1,3 +1,8 @@
+import { render } from '@testing-library/react';
+import { Element } from 'slate';
+
+import { Text } from './text';
+
 jest.mock('@plait/common', () => ({
   DEFAULT_FONT_FAMILY: 'Arial',
   clearElementSizeCache: jest.fn(),
@@ -13,11 +18,6 @@ jest.mock('@plait/text-plugins', () => ({
     wrapLink: jest.fn(),
   },
 }));
-
-import { render } from '@testing-library/react';
-
-import { Text } from './text';
-import { Element } from 'slate';
 
 describe('Text', () => {
   it('should render successfully', () => {

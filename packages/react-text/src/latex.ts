@@ -1,5 +1,3 @@
-/// <reference path="./katex.d.ts" />
-
 import {
   DEFAULT_FONT_FAMILY,
   clearElementSizeCache,

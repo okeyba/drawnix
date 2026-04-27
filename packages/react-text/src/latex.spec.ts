@@ -1,16 +1,16 @@
-jest.mock('@plait/common', () => ({
-  DEFAULT_FONT_FAMILY: 'Arial',
-  clearElementSizeCache: jest.fn(),
-  measureElement: jest.fn(() => ({ width: 1, height: 1 })),
-  updateElementSizeCache: jest.fn(),
-}));
-
 import {
   hasLatexBlocks,
   parseLatexBlocks,
   renderLatexTextToHtml,
   renderLatexToString,
 } from './latex';
+
+jest.mock('@plait/common', () => ({
+  DEFAULT_FONT_FAMILY: 'Arial',
+  clearElementSizeCache: jest.fn(),
+  measureElement: jest.fn(() => ({ width: 1, height: 1 })),
+  updateElementSizeCache: jest.fn(),
+}));
 
 describe('latex blocks', () => {
   it('keeps plain text as a text segment', () => {
