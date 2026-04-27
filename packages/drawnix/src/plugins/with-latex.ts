@@ -26,15 +26,34 @@ import {
 } from '@plait-board/react-text';
 
 const PATCHED_TEXT_MANAGES = new WeakSet<TextManage>();
+const BOARDS_WITH_LATEX_CACHE = new WeakSet<PlaitBoard>();
+const PENDING_LATEX_SIZE_CACHES = new WeakSet<PlaitBoard>();
+const PENDING_TEXT_MANAGE_BINDINGS = new WeakSet<PlaitBoard>();
 
 export const cacheLatexElementSizes = (
   board: PlaitBoard,
   elements: PlaitElement[] = board.children
 ) => {
   const includeSourceSize = PlaitBoard.hasBeenTextEditing(board);
+  const shouldClearMissingLatex = BOARDS_WITH_LATEX_CACHE.has(board);
+  let hasLatex = false;
   elements.forEach((element) => {
-    cacheLatexElementSize(board, element, includeSourceSize);
+    hasLatex =
+      cacheLatexElementSize(
+        board,
+        element,
+        includeSourceSize,
+        shouldClearMissingLatex
+      ) || hasLatex;
   });
+  if (elements === board.children) {
+    if (hasLatex) {
+      BOARDS_WITH_LATEX_CACHE.add(board);
+    } else {
+      BOARDS_WITH_LATEX_CACHE.delete(board);
+    }
+  }
+  return hasLatex;
 };
 
 export const withLatexBlockRendering: PlaitPlugin = (board) => {
@@ -44,7 +63,7 @@ export const withLatexBlockRendering: PlaitPlugin = (board) => {
   const { apply, insertFragment } = board;
   board.apply = (operation) => {
     apply(operation);
-    cacheLatexElementSizes(board);
+    scheduleLatexElementSizeCaching(board);
     scheduleTextManageBinding(board);
   };
 
@@ -63,25 +82,64 @@ export const withLatexBlockRendering: PlaitPlugin = (board) => {
 const cacheLatexElementSize = (
   board: PlaitBoard,
   element: PlaitElement,
-  includeSourceSize: boolean
+  includeSourceSize: boolean,
+  shouldClearMissingLatex: boolean
 ) => {
   bindLatexTextManageExit(board, element);
 
   if (MindElement.isMindElement(board, element)) {
-    cacheMindElementLatexSize(board, element, includeSourceSize);
-    element.children.forEach((child) =>
-      cacheLatexElementSize(board, child, includeSourceSize)
+    let hasLatex = cacheMindElementLatexSize(
+      board,
+      element,
+      includeSourceSize,
+      shouldClearMissingLatex
     );
+    element.children.forEach((child) =>
+      (hasLatex =
+        cacheLatexElementSize(
+          board,
+          child,
+          includeSourceSize,
+          shouldClearMissingLatex
+        ) || hasLatex)
+    );
+    return hasLatex;
+  }
+
+  let hasLatex = false;
+  findTextElements(element).forEach((textElement) => {
+    if (
+      hasLatexBlocksInTextElement(textElement) ||
+      shouldClearMissingLatex
+    ) {
+      hasLatex =
+        cacheDefaultLatexSize(board, textElement, includeSourceSize) ||
+        hasLatex;
+    }
+  });
+  return hasLatex;
+};
+
+const scheduleLatexElementSizeCaching = (board: PlaitBoard) => {
+  if (PENDING_LATEX_SIZE_CACHES.has(board)) {
     return;
   }
 
-  findTextElements(element).forEach((textElement) => {
-    cacheDefaultLatexSize(board, textElement, includeSourceSize);
-  });
+  PENDING_LATEX_SIZE_CACHES.add(board);
+  setTimeout(() => {
+    PENDING_LATEX_SIZE_CACHES.delete(board);
+    cacheLatexElementSizes(board);
+  }, 0);
 };
 
 const scheduleTextManageBinding = (board: PlaitBoard) => {
+  if (PENDING_TEXT_MANAGE_BINDINGS.has(board)) {
+    return;
+  }
+
+  PENDING_TEXT_MANAGE_BINDINGS.add(board);
   setTimeout(() => {
+    PENDING_TEXT_MANAGE_BINDINGS.delete(board);
     board.children.forEach((element) => {
       bindLatexTextManageExit(board, element);
     });
@@ -140,7 +198,12 @@ const prepareLatexTextManageEdit = (
     return;
   }
 
-  cacheLatexElementSize(board, element, true);
+  cacheLatexElementSize(
+    board,
+    element,
+    true,
+    BOARDS_WITH_LATEX_CACHE.has(board)
+  );
   updateTextManageRectangles(board, [element]);
 };
 
@@ -172,7 +235,12 @@ const cacheRenderedLatexElementSizes = (
   elements: PlaitElement[]
 ) => {
   elements.forEach((element) => {
-    cacheLatexElementSize(board, element, false);
+    cacheLatexElementSize(
+      board,
+      element,
+      false,
+      BOARDS_WITH_LATEX_CACHE.has(board)
+    );
   });
 };
 
@@ -244,9 +312,16 @@ const findCurrentElement = (
 const cacheMindElementLatexSize = (
   board: PlaitBoard,
   element: MindElement,
-  _includeSourceSize: boolean
+  _includeSourceSize: boolean,
+  shouldClearMissingLatex: boolean
 ) => {
-  cacheMindTopicLatexSize(board, element, element.data.topic, false);
+  if (
+    hasLatexBlocksInTextElement(element.data.topic) ||
+    shouldClearMissingLatex
+  ) {
+    return cacheMindTopicLatexSize(board, element, element.data.topic, false);
+  }
+  return false;
 };
 
 const cacheMindTopicLatexSize = (
@@ -255,7 +330,7 @@ const cacheMindTopicLatexSize = (
   topic: ParagraphElement,
   includeSourceSize: boolean
 ) => {
-  cacheLatexTextElementSize(board, topic, {
+  return cacheLatexTextElementSize(board, topic, {
     fontFamily: DEFAULT_FONT_FAMILY,
     fontSize: getDefaultFontSizeForMindElement(element),
     includeSourceSize,
@@ -268,7 +343,7 @@ const cacheDefaultLatexSize = (
   textElement: ParagraphElement,
   includeSourceSize: boolean
 ) => {
-  cacheLatexTextElementSize(board, textElement, {
+  return cacheLatexTextElementSize(board, textElement, {
     fontFamily: DEFAULT_FONT_FAMILY,
     fontSize: 14,
     includeSourceSize,

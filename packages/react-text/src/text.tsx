@@ -291,7 +291,7 @@ const LatexBlock = ({
   return (
     <span
       className={displayMode ? 'plait-latex-block' : 'plait-latex-inline'}
-      style={{ color: marks?.color }}
+      style={marks ? getLeafStyle(marks) : undefined}
       dangerouslySetInnerHTML={{
         __html: renderLatexFormulaToString(formula, displayMode),
       }}
@@ -350,11 +350,16 @@ const renderTextRange = (
       if (leaf.url) {
         return (
           <a
-            className="drawnix-link"
+            className="plait-board-link"
+            data-url={leaf.url}
             href={leaf.url}
             key={key}
             rel="noreferrer"
-            style={style}
+            style={{
+              ...style,
+              cursor: 'inherit',
+              textDecoration: 'none',
+            }}
             target="_blank"
           >
             {content}
@@ -383,7 +388,7 @@ const getMarksAtOffset = (
   leaves: FlattenedTextLeaf[],
   offset: number
 ): Omit<CustomText, 'text'> | undefined => {
-  return leaves.find((leaf) => leaf.start <= offset && leaf.end >= offset)
+  return leaves.find((leaf) => leaf.start <= offset && offset < leaf.end)
     ?.marks;
 };
 

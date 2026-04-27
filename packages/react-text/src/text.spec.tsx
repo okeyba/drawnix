@@ -35,6 +35,42 @@ describe('Text', () => {
     expect(container.querySelector('.katex')).toBeTruthy();
   });
 
+  it('uses marks from the leaf containing a latex segment', () => {
+    const ele: Element = {
+      children: [
+        { text: 'before ', 'font-size': 12 },
+        { text: '\\(x^2\\)', 'font-size': 28 },
+      ],
+      type: 'paragraph',
+    } as any;
+    const { container } = render(<Text text={ele} board={{} as any} />);
+    const latex = container.querySelector(
+      '.plait-latex-inline'
+    ) as HTMLElement;
+
+    expect(latex.style.fontSize).toBe('28px');
+  });
+
+  it('preserves link markup while rendering latex text', () => {
+    const ele: Element = {
+      children: [
+        {
+          children: [{ text: 'link' }],
+          type: 'link',
+          url: 'https://example.com',
+        },
+        { text: ' \\(x\\)' },
+      ],
+      type: 'paragraph',
+    } as any;
+    const { container } = render(<Text text={ele} board={{} as any} />);
+    const link = container.querySelector('a') as HTMLElement;
+
+    expect(link.className).toBe('plait-board-link');
+    expect(link.getAttribute('data-url')).toBe('https://example.com');
+    expect(link.getAttribute('href')).toBe('https://example.com');
+  });
+
   it('keeps latex source visible while editing', () => {
     const ele: Element = {
       children: [{ text: '\\[x^2\\]' }],
