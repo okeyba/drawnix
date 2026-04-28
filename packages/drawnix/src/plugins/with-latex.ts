@@ -29,7 +29,9 @@ import {
   findTextElements,
   hasLatexBlocksInTextElement,
   measureLatexTextElement,
+  parseLatexBlocks,
 } from '@plait-board/react-text';
+import { Node } from 'slate';
 
 const PATCHED_TEXT_MANAGES = new WeakSet<TextManage>();
 const BOARDS_WITH_LATEX_CACHE = new WeakSet<PlaitBoard>();
@@ -195,10 +197,14 @@ const bindLatexTextManageExit = (board: PlaitBoard, element: PlaitElement) => {
     const edit = textManage.edit.bind(textManage);
     textManage.edit = (callback, exitEdit) => {
       prepareLatexTextManageEdit(board, element);
-      return edit(() => {
-        callback?.();
-        schedulePostEditRefresh(board, element);
-      }, exitEdit);
+      const exit = edit(callback, (event) => {
+        return (
+          Boolean(exitEdit?.(event)) ||
+          shouldExitStandaloneLatexTextEdit(textManage, event)
+        );
+      });
+      scheduleActiveTextManageExitRefresh(board, element, textManage);
+      return exit;
     };
     PATCHED_TEXT_MANAGES.add(textManage);
     scheduleActiveTextManageExitRefresh(board, element, textManage);
@@ -214,8 +220,8 @@ const scheduleActiveTextManageExitRefresh = (
   editedElement: PlaitElement,
   textManage: TextManage
 ) => {
-  // A newly created text element can enter edit mode before this plugin binds
-  // textManage.edit, so watch the active edit once and refresh after it exits.
+  // TextManage invokes its callback before readonly rendering is restored, so
+  // wait for the edit session to fully close before measuring rendered LaTeX.
   if (
     !textManage.isEditing ||
     PENDING_TEXT_MANAGE_EXIT_REFRESHES.has(textManage)
@@ -226,14 +232,40 @@ const scheduleActiveTextManageExitRefresh = (
   PENDING_TEXT_MANAGE_EXIT_REFRESHES.add(textManage);
   const refreshWhenEditExits = () => {
     if (textManage.isEditing) {
-      setTimeout(refreshWhenEditExits, 50);
+      setTimeout(refreshWhenEditExits, 16);
       return;
     }
 
     PENDING_TEXT_MANAGE_EXIT_REFRESHES.delete(textManage);
     schedulePostEditRefresh(board, editedElement);
   };
-  setTimeout(refreshWhenEditExits, 50);
+  setTimeout(refreshWhenEditExits, 16);
+};
+
+const shouldExitStandaloneLatexTextEdit = (
+  textManage: TextManage,
+  event: Event
+) => {
+  if (
+    typeof KeyboardEvent === 'undefined' ||
+    !(event instanceof KeyboardEvent) ||
+    event.key !== 'Enter' ||
+    event.shiftKey ||
+    event.altKey ||
+    event.ctrlKey ||
+    event.metaKey
+  ) {
+    return false;
+  }
+
+  const text = textManage.getText();
+  if (!hasLatexBlocksInTextElement(text)) {
+    return false;
+  }
+
+  return parseLatexBlocks(Node.string(text)).every(
+    (segment) => segment.type === 'latex' || segment.text.trim() === ''
+  );
 };
 
 const prepareLatexTextManageEdit = (

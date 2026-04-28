@@ -4,6 +4,7 @@ import {
   renderLatexTextToHtml,
   renderLatexToString,
 } from './latex';
+import type { ParagraphElement } from '@plait/common';
 
 jest.mock('@plait/common', () => ({
   DEFAULT_FONT_FAMILY: 'Arial',
@@ -94,5 +95,22 @@ describe('latex blocks', () => {
     expect(html.endsWith('</span>after text')).toBe(true);
     expect(html).not.toContain('plain text<br />');
     expect(html).not.toContain('<br />after text');
+  });
+
+  it('preserves text marks when rendering latex html', () => {
+    const element: ParagraphElement = {
+      children: [
+        {
+          text: '\\[\\pi\\]',
+          'font-size': 24,
+          italic: true,
+        },
+      ],
+    };
+    const html = renderLatexTextToHtml(element);
+
+    expect(html).toContain('font-size: 24px');
+    expect(html).toContain('line-height: 1.5');
+    expect(html).toContain('font-style: italic');
   });
 });

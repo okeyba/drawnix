@@ -7,6 +7,7 @@ import {
   measureElement,
   updateElementSizeCache,
   type ElementSize,
+  type CustomText,
   type ParagraphElement,
 } from '@plait/common';
 import type { PlaitBoard } from '@plait/core';
@@ -39,6 +40,13 @@ export type LatexMeasureOptions = {
 export type LatexTextRenderRange = {
   start: number;
   end: number;
+};
+
+type FlattenedTextLeaf = {
+  end: number;
+  marks: Omit<CustomText, 'text'>;
+  start: number;
+  text: string;
 };
 
 const DEFAULT_FONT_SIZE = 14;
@@ -135,24 +143,23 @@ export const renderLatexFormulaToString = (
 
 export const renderLatexTextToHtml = (element: Node) => {
   const segments = parseLatexBlocks(Node.string(element));
+  const leaves = flattenTextLeaves(element);
   return segments
     .map((segment, index) => {
       if (segment.type === 'latex') {
         const className = segment.displayMode
           ? 'plait-latex-block'
           : 'plait-latex-inline';
-        return `<span class="${className}">${renderLatexFormulaToString(
+        const style = getLeafStyleAttribute(
+          getMarksAtOffset(leaves, segment.start)
+        );
+        return `<span class="${className}"${style}>${renderLatexFormulaToString(
           segment.formula,
           segment.displayMode
         )}</span>`;
       }
       const range = getLatexTextRenderRange(segments, index);
-      return escapeHtml(
-        segment.text.slice(
-          range.start - segment.start,
-          range.end - segment.start
-        )
-      ).replace(/\n/g, '<br />');
+      return renderTextRangeToHtml(leaves, range.start, range.end);
     })
     .join('');
 };
@@ -305,6 +312,95 @@ const escapeHtml = (input: string) => {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+};
+
+const flattenTextLeaves = (element: Node) => {
+  const leaves: FlattenedTextLeaf[] = [];
+  let offset = 0;
+
+  for (const [node] of Node.texts(element)) {
+    const text = node.text;
+    const start = offset;
+    offset += text.length;
+    leaves.push({
+      end: offset,
+      marks: node,
+      start,
+      text,
+    });
+  }
+
+  return leaves;
+};
+
+const renderTextRangeToHtml = (
+  leaves: FlattenedTextLeaf[],
+  start: number,
+  end: number
+) => {
+  return leaves
+    .filter((leaf) => leaf.end > start && leaf.start < end)
+    .map((leaf) => {
+      const sliceStart = Math.max(start, leaf.start) - leaf.start;
+      const sliceEnd = Math.min(end, leaf.end) - leaf.start;
+      const content = renderTextWithBreaksToHtml(
+        leaf.text.slice(sliceStart, sliceEnd)
+      );
+      const style = getLeafStyleAttribute(leaf.marks);
+
+      return style ? `<span${style}>${content}</span>` : content;
+    })
+    .join('');
+};
+
+const renderTextWithBreaksToHtml = (text: string) => {
+  return escapeHtml(text).replace(/\n/g, '<br />');
+};
+
+const getMarksAtOffset = (
+  leaves: FlattenedTextLeaf[],
+  offset: number
+): Omit<CustomText, 'text'> | undefined => {
+  return (
+    leaves.find((leaf) => leaf.start <= offset && offset < leaf.end)?.marks ||
+    leaves.find((leaf) => leaf.end === offset)?.marks
+  );
+};
+
+const getLeafStyleAttribute = (leaf?: Omit<CustomText, 'text'>) => {
+  if (!leaf) {
+    return '';
+  }
+
+  const declarations: string[] = [];
+  const fontSizeValue = leaf['font-size'];
+  if (fontSizeValue) {
+    declarations.push(`font-size: ${fontSizeValue}px`);
+    declarations.push('line-height: 1.5');
+  }
+  if (leaf.color) {
+    declarations.push(`color: ${leaf.color}`);
+  }
+  if (leaf.italic) {
+    declarations.push('font-style: italic');
+  }
+  if (leaf.bold) {
+    declarations.push('font-weight: bold');
+  }
+
+  const textDecorations = [
+    leaf.underlined ? 'underline' : '',
+    leaf.strike ? 'line-through' : '',
+  ].filter(Boolean);
+  if (textDecorations.length) {
+    declarations.push(`text-decoration: ${textDecorations.join(' ')}`);
+  }
+
+  if (!declarations.length) {
+    return '';
+  }
+
+  return ` style="${escapeHtml(`${declarations.join('; ')};`)}"`;
 };
 
 type LatexSyntax = {
