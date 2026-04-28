@@ -6,13 +6,19 @@ import {
 } from '@plait/common';
 import {
   PlaitBoard,
+  RectangleClient,
   type ClipboardData,
   type PlaitElement,
   type PlaitPlugin,
   type Point,
   type WritableClipboardOperationType,
 } from '@plait/core';
-import { DrawTransforms, PlaitDrawElement } from '@plait/draw';
+import {
+  DrawTransforms,
+  MIN_TEXT_WIDTH,
+  PlaitDrawElement,
+  ShapeDefaultSpace,
+} from '@plait/draw';
 import {
   MindElement,
   NodeSpace,
@@ -29,6 +35,8 @@ const PATCHED_TEXT_MANAGES = new WeakSet<TextManage>();
 const BOARDS_WITH_LATEX_CACHE = new WeakSet<PlaitBoard>();
 const PENDING_LATEX_SIZE_CACHES = new WeakSet<PlaitBoard>();
 const PENDING_TEXT_MANAGE_BINDINGS = new WeakSet<PlaitBoard>();
+const PENDING_TEXT_MANAGE_EXIT_REFRESHES = new WeakSet<TextManage>();
+const BOARDS_UPDATING_LATEX_TEXT_SIZE = new WeakSet<PlaitBoard>();
 
 export const cacheLatexElementSizes = (
   board: PlaitBoard,
@@ -62,8 +70,12 @@ export const withLatexBlockRendering: PlaitPlugin = (board) => {
 
   const { apply, insertFragment } = board;
   board.apply = (operation) => {
+    const shouldScheduleLatexRefresh =
+      !BOARDS_UPDATING_LATEX_TEXT_SIZE.has(board);
     apply(operation);
-    scheduleLatexElementSizeCaching(board);
+    if (shouldScheduleLatexRefresh) {
+      scheduleLatexElementSizeCaching(board);
+    }
     scheduleTextManageBinding(board);
   };
 
@@ -94,24 +106,22 @@ const cacheLatexElementSize = (
       includeSourceSize,
       shouldClearMissingLatex
     );
-    element.children.forEach((child) =>
-      (hasLatex =
-        cacheLatexElementSize(
-          board,
-          child,
-          includeSourceSize,
-          shouldClearMissingLatex
-        ) || hasLatex)
+    element.children.forEach(
+      (child) =>
+        (hasLatex =
+          cacheLatexElementSize(
+            board,
+            child,
+            includeSourceSize,
+            shouldClearMissingLatex
+          ) || hasLatex)
     );
     return hasLatex;
   }
 
   let hasLatex = false;
   findTextElements(element).forEach((textElement) => {
-    if (
-      hasLatexBlocksInTextElement(textElement) ||
-      shouldClearMissingLatex
-    ) {
+    if (hasLatexBlocksInTextElement(textElement) || shouldClearMissingLatex) {
       hasLatex =
         cacheDefaultLatexSize(board, textElement, includeSourceSize) ||
         hasLatex;
@@ -128,8 +138,17 @@ const scheduleLatexElementSizeCaching = (board: PlaitBoard) => {
   PENDING_LATEX_SIZE_CACHES.add(board);
   setTimeout(() => {
     PENDING_LATEX_SIZE_CACHES.delete(board);
-    cacheLatexElementSizes(board);
+    refreshLatexElementsAfterApply(board);
   }, 0);
+};
+
+const refreshLatexElementsAfterApply = (board: PlaitBoard) => {
+  const isTextEditing = PlaitBoard.hasBeenTextEditing(board);
+  cacheLatexElementSizes(board);
+  if (!isTextEditing) {
+    resizeAutoSizeTextElements(board, board.children);
+  }
+  updateTextManageRectangles(board, board.children);
 };
 
 const scheduleTextManageBinding = (board: PlaitBoard) => {
@@ -182,11 +201,39 @@ const bindLatexTextManageExit = (board: PlaitBoard, element: PlaitElement) => {
       }, exitEdit);
     };
     PATCHED_TEXT_MANAGES.add(textManage);
+    scheduleActiveTextManageExitRefresh(board, element, textManage);
   });
 
   if (MindElement.isMindElement(board, element)) {
     element.children.forEach((child) => bindLatexTextManageExit(board, child));
   }
+};
+
+const scheduleActiveTextManageExitRefresh = (
+  board: PlaitBoard,
+  editedElement: PlaitElement,
+  textManage: TextManage
+) => {
+  // A newly created text element can enter edit mode before this plugin binds
+  // textManage.edit, so watch the active edit once and refresh after it exits.
+  if (
+    !textManage.isEditing ||
+    PENDING_TEXT_MANAGE_EXIT_REFRESHES.has(textManage)
+  ) {
+    return;
+  }
+
+  PENDING_TEXT_MANAGE_EXIT_REFRESHES.add(textManage);
+  const refreshWhenEditExits = () => {
+    if (textManage.isEditing) {
+      setTimeout(refreshWhenEditExits, 50);
+      return;
+    }
+
+    PENDING_TEXT_MANAGE_EXIT_REFRESHES.delete(textManage);
+    schedulePostEditRefresh(board, editedElement);
+  };
+  setTimeout(refreshWhenEditExits, 50);
 };
 
 const prepareLatexTextManageEdit = (
@@ -275,9 +322,35 @@ const resizeAutoSizeTextElement = (
     fontFamily: DEFAULT_FONT_FAMILY,
     fontSize: 14,
   });
-  if (size) {
-    DrawTransforms.setTextSize(board, element, size.width, size.height);
+  if (
+    size &&
+    !hasCurrentAutoSizeTextElementSize(element, size.width, size.height)
+  ) {
+    BOARDS_UPDATING_LATEX_TEXT_SIZE.add(board);
+    try {
+      DrawTransforms.setTextSize(board, element, size.width, size.height);
+    } finally {
+      BOARDS_UPDATING_LATEX_TEXT_SIZE.delete(board);
+    }
   }
+};
+
+const hasCurrentAutoSizeTextElementSize = (
+  element: PlaitElement,
+  width: number,
+  height: number
+) => {
+  if (!PlaitDrawElement.isText(element)) {
+    return false;
+  }
+
+  const rectangle = RectangleClient.getRectangleByPoints(element.points);
+  const targetWidth =
+    Math.max(width, MIN_TEXT_WIDTH) + ShapeDefaultSpace.rectangleAndText * 2;
+  return (
+    Math.abs(rectangle.width - targetWidth) < 1 &&
+    Math.abs(rectangle.height - height) < 1
+  );
 };
 
 const findCurrentElement = (
